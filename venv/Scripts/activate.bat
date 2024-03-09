@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\matdo\Desktop\SITO_MIO\SITO_WEB_BLOG\venv
+set VIRTUAL_ENV=C:\Users\matdo\Desktop\SITO_MIO\PersonalWebsite_Blog\venv
 
 if not defined PROMPT set PROMPT=$P$G
 

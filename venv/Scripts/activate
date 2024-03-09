@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\matdo\Desktop\SITO_MIO\SITO_WEB_BLOG\venv"
+VIRTUAL_ENV="C:\Users\matdo\Desktop\SITO_MIO\PersonalWebsite_Blog\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
