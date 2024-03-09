@@ -1,0 +1,92 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p class="mb-1">Un <strong class="text-warning">THREAD</strong> è una sezione di un processo che viene schedulata ed eseguita indipendentemente dal processo (o thread) che l’ha generata. Un thread condivide il proprio spazio di indirizzamento con gli altri thread. Quindi il thread è un processo “leggero” (processo = unità che raggruppa le risorse, thread = unità di schedulazione della CPU). Rispetto agli altri thread, un thread ha:</p>
+    <ul class="livello3">
+        <li><span class="sottolineato">DATI CONDIVISI</span> → sezione di codice, sezione di dati (variabili, descrittori dei file…), risorse dell’OS (segnali);</li>
+        <li><span class="sottolineato">DATI PRIVATI</span> → PC (Program counter), registri hardware, stack (variabili locali).</li>
+    </ul>
+    <p class="mb-1">Quindi, per quanto riguarda la <strong>programmazione multi-thread</strong>:</p>
+    <ul class="livello2">
+        <li><span class="pro">Pro</span>: tempi di risposta ridotti, risorse condivise, costi ridotti, maggiore scalabilità</li>
+        <li><span class="contro">Contro</span>: non esiste protezione tra thread (se i thread non sono sincronizzati, l’accesso ai dati condivisi non è “thread safe”) e non esiste gerarchia padre-figlio tra i thread (tutti paritetici)</li>
+    </ul>
+    <p class="mb-1">Esistono <strong class="text-warning">3 modelli di programmazione multi-thread</strong>:</p>
+    <ul class="mb-4">
+        <li><strong>Kernel-Level</strong> → thread gestiti dal kernel, ovvero l’OS conosce e manipola i thread (come manipola i processi) [tutte le operazioni sui thread vengono effettuate con le syscall]. L’OS inoltre mantiene per ciascun thread informazioni simili a quelle che mantiene per ogni processo (tabella dei thread).
+            <ul class="livello2">
+                <li><span class="pro">Pro</span>: l’OS conosce i thread, efficace nelle applicazioni che si bloccano spesso (es. read bloccante) e permette parallelismo</li>
+                <li><span class="contro">Contro</span>: a causa del passaggio a kernel mode (syscall), la gestione è lenta e inefficiente; è limitato il max numero di thread e l’OS deve mantenere troppe informazioni (tabella dei Thread e TCB, Thread Control Block)</li>
+            </ul>
+        </li>
+        <li><strong>User-Level</strong> → gestiti run-time a livello utente (tramite una libreria), cioè kernel non conosce i thread (gestisce solo i processi); ogni processo ha però bisogno di una tabella personale dei thread in esecuzione (ma comunque meno informazioni richieste del Kernel-Level).
+            <ul class="livello2">
+                <li><span class="pro">Pro</span>: i thread si possono implementare in tutti i kernel (anche nei sistemi che non li supportano nativamente), non si richiedono modifiche dell’OS, gestione efficiente e il programmatore può generare tutti i thread che vuole</li>
+                <li><span class="contro">Contro</span>: l’OS non conosce i thread e può portare ad inefficienza; inoltre bisogna comunicare informazioni tra kernel e utente, lo scheduler deve mappare i thread utente sull’unico thread kernel (ovvero se thread kernel si blocca, si bloccano anche tutti i thread utente)</li>
+            </ul>
+        </li>
+        <li><strong>Mista</strong> (soluzione ibrida) → si tenta di combinare i vantaggi di entrambe: l’utente decide quanti thread utente eseguire e su quanti thread kernel mapparli, mentre il kernel conosce e gestisce solo i thread kernel (ogni thread kernel può essere usato a turno da diversi thread utente).</li>
+    </ul>
+    <p class="mb-1"><mark>Come coesistono thread e processi?</mark> La coesistenza porta a diversi problemi:</p>
+    <ul class="livello3">
+        <li><span class="sottolineato">Gestione dei segnali</span>: il comportamento di un processo alla ricezione di un segnali specifico è condiviso da tutti i thread e ogni segnale è consegnato ad un thread singolo all’interno del processo;</li>
+        <li><span class="sottolineato">Utilizzo della fork</span>: in un processo multi-thread, una fork duplica solo il thread che richiama la fork (i dati privati dei thread non duplicati dalla fork possono non essere gestibili dall’unico thread duplicato);</li>
+        <li><span class="sottolineato">Utilizzo della exec</span>: una exec effettuata da un thread sostituisce con il nuovo programma l’intero processo (non solo il thread che fa l’exec).</li>
+    </ul>
+    <p class="mb-2">Vediamo ora la libreria <strong class="text-warning">PTHREADS</strong> (Posix Threads, <strong class="consolas">#include &lt;pthread.h></strong>), una libreria UNIX per la gestione dei thread; il thread viene gestito come una funzione che viene eseguita in maniera indipendente dal resto del programma. Questa libreria definisce 60 funzioni di gestione dei thread (tutte con “pthread_nomeFunzione”). Per compilare un programma includendo questa libreria, bisogna scrivere <strong class="consolas">gcc -Wall -g -o &lt;exeName> -pthread &lt;file.c></strong>. Un thread è identificato in maniera univoca da un TID, identificatore di tipo pthread_t (simile al tipo pid_t). Vediamo ora le funzioni:</p>
+    <ul>
+        <li class="mb-3"><strong class="consolas">int pthread_equal (pthread_t tid1, pthread_t tid2)</strong> → confronta 2 identificatori di thread (torna valore ≠ 0 se thread uguali, altrimenti 0);</li>
+        <li class="mb-3"><strong class="consolas">pthread_t pthread_self (void)</strong> → ritorna l’identificatore del thread chiamante (usata con la equal per auto-identificarsi, utile per accedere ai propri dati personali);</li>
+        <li class="mb-3"><strong class="consolas">int pthread_create (pthread_t *tid, pthread_attr_t *attr, void *(*startRoutine)(void*), void *arg)</strong> → crea un nuovo thread (il numero massimo di create dipende dall’implementazione); ha come parametri il puntatore all’identificatore del thread generato, i suoi attributi [default = NULL], la routine C eseguita dal thread e l’argomento passato alla routine di inizio. Torna 0 = successo, errore = fallimento;</li>
+        <li class="mb-3"><strong class="consolas">void pthread_exit (void *valuePtr)</strong> → permette ad un thread di terminare restituendo il suo stato di terminazione. Il valore valuePtr è mantenuto dall’OS fino a quando un thread fa una pthread_join (il valore sarà disponibile a quel thread);
+            <p class="mb-3">⚠️Un intero processo (con tutti i suoi thread) termina se un suo thread fa exit, il main effettua una return o un suo thread riceve un segnale la cui azione è terminare; invece un singolo thread termina se effettua una return dalla sua funzione di inizio, esegue una pthread_exit o riceve una pthread_cancel da un altro thread!</p>
+        </li>
+        <li class="mb-3"><strong class="consolas">void pthread_join (pthread_t tid, void **valuePtr)</strong> → usata per fare la wait su un altro thread; i parametri sono il tid atteso e il valore valuePtr che riferirà il valore tornato dal thread. Torna 0 = successo, errore = fallimento;
+            <p>⚠️Alla sua creazione un thread può essere dichiarato “joinable” (ovvero il suo stato di terminazione viene mantenuto fino a quando un altro thread esegue una pthread_join per quel thread) o “detached” (stato di terminazione subito droppato). Il thread che richiama la pthread_join rimane bloccato fino a che il thread richiesto non fa la pthread_exit!</p>
+        </li>
+        <li class="mb-3"><strong class="consolas">int pthread_cancel (pthread_t tid)</strong> → termina il thread indicato (come se fosse una pthread_exit con parametro PTHREAD_CANCELED). Il thread chiamante non attende la terminazione del thread che vuole cancellare (continua nel mentre). Torna 0 = successo, errore = fallimento;</li>
+        <li><strong class="consolas">int pthread_detach (pthread_t tid)</strong> → dichiara il thread come detached (la memoria del thread che termina sarà restituita all’OS) per cui non sarà più possibile fare una join con quel thread. Torna 0 = successo, errore = fallimento.</li>
+    </ul>
+    <p class="mb-2"><mark>ESERCIZIO - Realizzare con i thread il seguente grafo di precedenza:</mark></p>
+    <div class="row mb-3">
+        <div class="col-4"></div>
+        <img class="img-fluid col-4" src="{{url_for('static', filename='thread.png')}}" alt="thread">
+        <div class="col-4"></div>
+    </div>
+    <pre><strong class="consolas">
+        // funzione per wait con tempo random (per non far terminare il thread)
+        void waitRandomTime (int max){
+            sleep ((int)(rand() % max) + 1);
+        }
+
+        int main (void) {
+            // dichiaro i tid dei thread che dovrò passare alla funzione
+            pthread_t th_cf, th_e;
+            void *retval;
+            // sid
+            srand (getpid());
+            waitRandomTime (10); printf ("A\n");
+            waitRandomTime (10); pthread_create (&th_cf,NULL,CF,NULL);
+            waitRandomTime (10); printf ("B\n");
+            waitRandomTime (10); pthread_create (&th_e,NULL,E,NULL);
+            waitRandomTime (10); printf ("D\n");
+            pthread_join (th_e, &retval);
+            pthread_join (th_cf, &retval);
+            waitRandomTime (10); printf ("G\n");
+            return 0;
+        }
+
+        // funzione per i thread C e F
+        static void *CF () {
+            waitRandomTime (10); printf ("C\n");
+            waitRandomTime (10); printf ("F\n");
+            return ((void *) 1); // Return code
+        }
+        // funzione per il thread E
+        static void *E () {
+            waitRandomTime (10); printf ("E\n");
+            return ((void *) 2); // Return code
+        }
+        </strong></pre>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p>Le regole che definiscono l’interazione tra elementi dello stesso livello gerarchico di una rete si chiamano <strong class="text-primary">PROTOCOLLI</strong>; la gerarchia tra i protocolli definisce l’<span class="text-primary">ARCHITETTURA DI RETE</span>. Un protocollo prevede lo scambio di messaggi definendone tipologia (richieste o risposte), sintassi (struttura dei messaggi), semantica (significato di campi di bit nei messaggi) e temporizzazione.</p>
+    <p>Nelle reti si usano <span class="text-primary">ARCHITETTURE STRATIFICATE</span> per semplicità di progetto, gestione e standardizzazione e per la separazione di funzioni (bisogna garantire la struttura gerarchica). L’architettura di rete definisce il processo di comunicazione, le relazioni tra le entità coinvolte nella comunicazione, le funzioni necessarie per la comunicazione (es. conversione in/da bit) e l’organizzazione delle funzioni.
+    Il modello di riferimento usato nelle reti è il modello <span class="text-primary">OSI</span> (Open System Interconnection) [importante conoscere il nome e numero degli stati].</p>
+    <p>Una rete è composta da <span class="text-primary">SISTEMI</span> (terminali, nodi, …) collegati tra loro da <span class="text-primary">MEZZI TRASMISSIVI</span>, dove ogni sistema avrà dei processi applicativi (app) che dovranno comunicare tra loro attraverso i mezzi trasmissivi. Ogni sistema è composto da <span class="text-primary">STRATI</span>; ogni strato realizza le proprie funzioni tramite le sue ENTITÁ (lo strato più elevato è più vicino all’utente [es. interfaccia di un app], mentre quello più basso è più vicino ai mezzi trasmissivi).</p>
+    <p>Le <span class="text-primary">ENTITÁ</span> sono gli elementi attivi dello strato (o sottosistema), cioè svolgono le funzioni di strato (interagiscono nello strato). Stratificazione della rete significa che ogni strato riceve servizi dallo strato inferiore e li usa con le proprie funzioni per migliorare/integrare il servizio ricevuto dallo strato inferiore, per poi passarlo allo stato superiore.</p>
+    <p>Per quanto riguarda il SERVIZIO, identifichiamo i fornitori di servizio, gli utenti di servizio e i punti di accesso al servizio (Service Access Point [SAP]). Un servizio può essere:</p>
+    <ul>
+        <li><span class="text-primary">connection-oriented</span> [CO] = si stabilisce un accordo preliminare tra rete e interlocutori [es. login di un servizio in banca, dove serve sapere chi è l’interlocutore], come il circuito virtuale;</li>
+        <li><span class="text-primary">connectionless</span> [CL] = i dati vengono trattati in modo indipendente [es. guardare il meteo online, dove non serve loggarsi e sapere chi siamo], come il datagram.</li>
+    </ul>
+    <p>La stratificazione funzione come la compartimentazione, ovvero ogni strato percepisce gli strati inferiori come delle “black box” (ovvero usa il servizio fornito dagli strati inferiori, ma non sa né come sono fatti né quanti sono gli strati inferiori). Dunque abbiamo la connessione tra:</p>
+    <ul>
+        <li>entità superiore (N+1) e inferiore (N) dello stesso sistema [quindi ricezione del servizio] → <strong class="text-primary">(N)-SAP</strong>;</li>
+        <li>entità stesso strato (N) di sistemi uguali o diversi → <strong class="text-primary">(N)-PROTOCOLLO</strong>.</li>
+    </ul>
+    <p>Una <strong class="text-primary">CONNESSIONE</strong> è una relazione esistente tra SAP dello stesso strato di sistemi diversi per lo scambio di dati tra interfacce.</p>
+    <p>In un sistema a strati, ogni strato (N) ha il proprio <strong class="text-primary">N-PDU</strong>, dove ha i dati dell’utente (<strong class="text-primary">N-SDU</strong>) e aggiunge le proprie informazioni di controllo (<strong class="text-primary">N-PCI</strong>, ovvero l’intestazione). Ogni strato inferiore tratta la PDU dello strato superiore come una “busta chiusa” a cui aggiungere solo un’intestazione (INCAPSULAMENTO) [ai dati vengono aggiunti tante intestazioni quanti sono gli strati attraversati nel sistema], mentre in ricezione avviene il processo inverso [come sbucciare la cipolla].</p>
+    <p>Sulle PDU esiste la possibilità di <span class="text-primary">SEGMENTAZIONE</span> e CONCATENAZIONE; queste possono avvenire in 2 modi:</p>
+    <ul class="mb-1">
+        <li>costruendo più (N)-PDU da 1 (N)-SDU;</li>
+        <li>costruendo più (N-1)-SDU da 1 (N)-PDU.</li>
+    </ul>
+    <p>Segmentare è sconveniente perché comporta overhead (ovvero più intestazioni inutili) e necessità di ri-assemblare in caso di ricezione; inoltre se perdo un pezzo, perdo tutto!</p>
+    <p class="mb-0">Vediamo ora i <strong class="text-primary">7 STRATI</strong> prima anticipati:</p>
+    <div class="row">
+        <div class="col-2"></div>
+        <img class="img-fluid col-8" src="{{url_for('static', filename='7_strati_osi.png')}}" alt="7_strati_osi">
+        <div class="col-2"></div>
+    </div>
+    <ul>
+        <li><strong class="text-primary">STRATO FISICO</strong> (physical layer) [1] = trasferimento dei bit scambiati dalle entità di strato di collegamento [PDU= bit o simboli];</li>
+        <li><strong class="text-primary">STRATO COLLEGAMENTO</strong> (data link layer) [2] = delimitazione dei PDU, rilevazione e recupero degli errori di trasmissione, controllo di flusso [PDU = trama o frame]</li>
+        <li><strong class="text-primary">STRATO RETE</strong> (network layer) [3] = instradamento, tariffazione (e controllo di flusso) [PDU = datagram];</li>
+        <li><strong class="text-primary">STRATO TRASPORTO</strong> (transport layer) [4] = colma le carenze di qualità di servizio dello strato di rete, controlla errori, sequenze, flusso, esegue multiplazione/demultiplazione di connessioni (diversa dalla multiplazione vista in precedenza, perché qui multiplazione = mettere insieme informazioni da applicazioni diverse e mandarle in rete segnalando l’applicazione di provenienza) esegue la segmentazione dei dati in pacchetti (e la loro ricomposizione) [PDU = segmenti];</li>
+        <li><strong class="text-primary">STRATO APPLICAZIONE</strong> (application layer) [7] = fornisce ai processi applicativi i mezzi per accedere all’ambiente OSI (esempio di servizi: trasferimento di file, terminale virtuale, posta elettronica). Questo strato racchiude STRATO DI SESSIONE (session layer) e DI PRESENTAZIONE (presentation layer).</li>
+    </ul>
+</div>
+{% endblock %}

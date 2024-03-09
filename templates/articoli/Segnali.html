@@ -1,0 +1,102 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p>Definiamo <strong class="text-warning">SEGNALE</strong> un interrupt software (INTERRUPT = interruzione dell’esecuzione corrente dovuto al verificarsi di un evento [es. un dispositivo hardware che invia una richiesta di servizio alla CPU (interrupt hardware) o processo che richiede un’operazione tramite una syscall (interrupt software)]), ovvero una notifica inviata dal kernel o da un processo ad un altro processo per dirgli che si è verificato un particolare evento. Permettono di gestire eventi asincroni e possiamo usarli per la comunicazione tra processi. Hanno nomi che iniziano con SIG (definiti nel file <strong class="consolas">signal.h</strong>) [es. SIGUSR1 o SIGUSR2, disponibili nelle applicazioni utente, usati per far terminare qualcosa].</p>
+    <p class="mb-1">La manipolazione di segnali ha 3 fasi:</p>
+    <ul class="livello3">
+        <li>GENERAZIONE → quando il kernel o il processo sorgente effettua l’evento;</li>
+        <li>CONSEGNA → invio del segnale alla destinazione;</li>
+        <li>GESTIONE → il processo destinazione deve dire al kernel cosa vuole fare nel caso riceva uno specifico segnale.</li>
+    </ul>
+    <p class="mb-2">Vediamo quindi le <mark>syscall</mark> usate per manipolare i segnali:</p>
+    <ul>
+        <li><strong class="consolas">void (*signal (int sig, void (*func) (int)))(int)</strong> → <span class="text-warning">instanzia un gestore di segnali</span>, ovvero specifica il segnale da gestire (sig) la cui ricezione attiverà la funzione per gestirlo (func) [cioè il gestore di segnali (signal handler)]. In caso di successo, ritorna il puntatore alla funzione gestore del segnale (*func), mentre SIG_ERR in caso di errore. Inoltre, permette di impostare 3 comportamenti diversi:
+            <ul class="livello2 mb-1">
+                <li>lasciare che si verifichi il comportamento di default [func = <strong>SIG_DFL</strong>];</li>
+                <li>ignorare il segnale [func = <strong>SIG_IGN</strong>] (non si può fare con i segnali SIGKILL, SIG_STOP, SIG_STP);</li>
+                <li>catturare il segnale (func specificata da noi).</li>
+            </ul>
+            <p class="mb-2">⚠️Se non vogliamo fare una terminazione sincrona con la wait oppure asincrona con una funione gestore apposita e non vogliamo far diventare i figli del processo dei processi zombie, allora dobbiamo impostare una signal (SIGCHLD, SIG_IGN) in modo che la terminazione dei figli venga ignorata!</p>
+        </li>
+        <li><strong class="consolas">int kill (pid_t pid, int sig)</strong> → <span class="text-warning">invia il segnale</span> sig ad un processo o ad un gruppo di processi pid. Per inviare un segnale ad un processo occore averne diritto. Torna 0 se successo, -1 se errore. Se:
+            <ul class="livello2 mb-2">
+                <li>pid > 0: invia al processo con quel specifico pid;</li>
+                <li>pid = -1: invia a tutti i processi che può raggiungere;</li>
+                <li>pid = 0: invia a tutti i processi con gid = gid del chiamante;</li>
+                <li>abs(pid) &lt; -1: invia a tutti i processi con gid = quel valore.</li>
+            </ul>
+        </li>
+        <li class="mb-2"><strong class="consolas">int raise (int sig)</strong> → permette ad un processo di <span class="text-warning">inviare un segnale sig a sé stesso</span> (di default, se scrivo raise(sig) equivale a kill(getpid(), sig));</li>
+        <li class="mb-2"><strong class="consolas">int pause ()</strong> → <span class="text-warning">sospende il processo chiamante fino all’arrivo di un segnale</span> (ritorna -1 solo quando viene eseguito un gestore di segnali che termina la sua esecuzione);</li>
+        <li><strong class="consolas">unsigned int alarm (unsigned int seconds)</strong> → <span class="text-warning">attiva un timer</span> di n° secondi = seconds; finito il countdown, viene generato il segnale SIGALRM (e di default, se SIGALRM viene ignorato, termina il processo [se seconds = 0, si disattiva il precedente allarme]). Il return è il n° di secondi rimasti prima dell’invio del segnale se ci sono state chiamate precedenti, oppure 0 in caso non ci siano state chiamate precedenti.
+            <p class="mt-1">⚠️C’è un solo timer per ciascun processo, dunque le syscall sleep e alarm usano lo stesso timer!</p>
+        </li>
+    </ul>
+    <p class="mb-1">Per quanto riguarda i <strong class="text-warning">LIMITI DEI SEGNALI</strong>:</p>
+    <ul class="livello3">
+        <li><strong>MEMORIA</strong> dei segnali “pending” (inviati ma non consegnati) è <strong>LIMITATA</strong> → si ha al max 1 segnale “pending” per ciascun tipo di segnale [quelli successivi dello stesso tipo si perdono]. Inoltre i segnali possono essere bloccati (ovvero si può evitare di riceverli) [con il comando kill -9 &lt;pid del processo> si uccide un processo perché -9 = SIGKILL].</li>
+        <li>Richiedono <strong>FUNZIONI RIENTRANTI</strong> → quando si esegue un segnale, una volta finita la gestione, il kernel sa dove riprendere il flusso delle istruzioni (bloccate in precedenza per eseguire il segnale). Cosa succede però se il signal handler fa un’operazione non compatibile con il flusso di istruzioni bloccate? [es. interrompiamo una malloc o interrompiamo l’esecuzione di una funzione che usa una variabile statica]. Lo UNIX definisce una serie di funzioni (dette rientranti) che possono essere interrotte senza problemi (es. read, write, sleep, wait …), ma la maggior parte delle funzioni di I/O del C non sono rientranti (es. printf, scanf…)!!!</li>
+        <li>Producono <strong>RACE CONDITIONS</strong> → il comportamento di più processi che lavorano sugli stessi dati dipende dall’ordine di esecuzione. Questa cosa va gestita, altrimenti si generano dei problemi.</li>
+    </ul>
+    <p>⚠️Nonostante i loro difetti, i segnali possono fornire un meccanismo di sincronizzazione!</p>
+    <p class="mb-2"><mark>Esercizio - trascurando le race conditions realizzare il programma del seguente grafo di precedenza (CFG):</mark></p>
+    <div class="row mb-3">
+        <div class="col-4"></div>
+        <img class="img-fluid col-4" src="{{url_for('static', filename='segnali.png')}}" alt="segnali">
+        <div class="col-4"></div>
+    </div>
+    <pre><strong class="consolas">
+        // Signal Handler
+        static void sigUsr (int signo) {
+            if (signo == SIGUSR1) printf("SIGUSR1\n");
+            else if (signo == SIGUSR2) printf("SIGUSR2\n");
+            else printf("Signal %d\n", signo);
+            return;
+        }
+        void P1 (pid_t  cpid) {
+            printf("S11\n");
+            kill(cpid, SIGUSR1);
+            printf("S12\n");
+            pause();
+            printf("S13\n");
+            return;
+        }
+        void P2 () {
+            if (fork() > 0){
+                printf("S21\n");
+                pause();
+                printf("S23\n");
+                kill(getpid(), SIGUSR2);
+                wait((int*) 0);
+            } else {
+                printf("S22\n");
+                exit(0);
+            }
+            printf("S24\n");
+            return;
+        }
+        int main(void) {
+            pid_t pid;
+            if (signal(SIGUSR1, sigUsr) == SIG_ERR) {
+                printf("Signal Handler Error.\n");
+                return(1);
+            }
+            if (signal(SIGUSR2, sigUsr) == SIG_ERR) {
+                printf("Signal Handler Error.\n");
+                return(1);
+            }
+            printf("S20\n");
+            pid = fork();
+            if(pid > (pid_t) 0){
+                P1(pid);
+                wait((int*) 0);
+            } else {
+                P2();
+                exit(0);
+            }
+            printf("S25\n");
+            return (0);
+        }
+        </strong></pre>
+</div>
+{% endblock %}

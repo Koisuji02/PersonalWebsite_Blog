@@ -1,0 +1,314 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p>Nella programmazione parallela (tramite Processi o Thread) bisogna manipolare dati condivisi, si possono verificare corse critiche e possono esistere tratti di codice non rientranti; dunque serve <span class="text-warning">SINCRONIZZAZIONE</span> tra processi/thread. Facendo riferimento allo Stack (LIFO), le funzioni di push e pop agiscono sulla stessa estremità dello stack, ma se non sincronizzo bene i processi che agiscono simultaneamente sullo stack, faccio push/pop nei momenti sbagliati (togliendo o aggiungendo dati nell’ordine errato) [in quanto la variabile “top” (cima dello stack) è condivisa]; analogamente accade su una Queue (FIFO).</p>
+    <p class="mb-2">Definiamo <strong class="text-warning">SEZIONE CRITICA</strong> (SC) [o regione critica, RC] una sezione di codice comune a più processi/thread, dove questi accedono ad oggetti comuni (competono per l’uso di risorse comuni); la soluzione è stabilire un PROTOCOLLO DI ACCESSO per forzare la MUTUA ESCLUSIONE: per entrare in una SC, il processo esegue un codice di prenotazione, mente per uscire da una SC, il processo esegue un codice di rilascio. Dunque ogni SC è protetta da una sezione di ingresso (prenotazione o prologo) e da una sezione di uscita (rilascio o epilogo) [le sezioni non critiche non devono essere protette] [sezioni critiche indipendenti devono essere protette separatemente].</p>
+    <p class="mb-1">Ogni soluzione alle SC deve soddisfare dei <mark>requisiti</mark>:</p>
+    <ul>
+        <li><strong>MUTUA ESCLUZIONE</strong> (ME) → 1 solo processo/thread per volta deve accedere alla SC;</li>
+        <li><strong>PROGRESSO</strong> → occorre evitare DEADLOCK tra processi (nessun processo fuori dalla SC può bloccarne altri);</li>
+        <li><strong>ATTESA DEFINITA</strong> → occorre evitare STARVATION di processi [deve esistere un numero definito di volte per cui altri P (o T) riescano ad accedere alla SC prima che un P (o T) specifico e che ha fatto una richiesta di accesso possa farlo];</li>
+        <li><strong>SIMMETRIA</strong> → la selezione di chi deve accedere alla SC non dovrebbe dipendere dalla priorità relativa o dalla velocità relativa.</li>
+    </ul>
+    <p class="mb-1">Ci sono <strong>3 soluzioni possibili</strong>:</p>
+    <ol>
+        <li><strong class="text-warning">SOFTWARE</strong> → fatte dal programmatore; si basano sull’uso della variabili globali. Vedremo il caso con 2 soli processi/thread, denominati Pi e Pj (dunque dato i allora j=1-i e viceversa). La soluzione di Peterson usa una variabile turn sia un vettore flag[2]. Questa assicura MUTUA ESCLUSIONE, elimina DEADLOCK (garantisce il progresso), elimina STARVATION (garantisce attesa definita) e garantisce SIMMETRIA (codici di i e j identici), ma comporta busy waiting con spin lock (spreco di CPU time) ed è complessa.
+            <pre><strong class="consolas">
+flag[2], turn;
+<strong class="text-warning">//Pi</strong>
+while(1) {
+    flag[i] = TRUE;
+    turn = j;
+    while(flag[j] && turn == j);
+    SezioneCritica();
+    flag[i] = FALSE;
+}
+<strong class="text-warning">//Pj</strong>
+while(1) {
+    flag[j] = TRUE;
+    turn = i;
+    while(flag[i] && turn == i);
+    SezioneCritica();
+    flag[j] = FALSE;
+}
+            </strong></pre>
+        </li>
+        <li><strong class="text-warning">HARDWARE</strong> → si basano su soluzioni architetturali che garantiscono ATOMICITÁ. Ci sono 2 tipi:
+            <ul class="livello3 mb-2">
+                <li><span class="sottolineato">Soluzioni senza diritto di prelazione</span> = i processi in esecuzione nella CPU non possono essere interrotti e il controllo verrà lasciato al kernel solo quando il processo lo lascerà volontariamente; questo elimina il problema della SC nei sistemi mono-processore (ma noi usiamo sistemi multicore, quindi grave!!!).</li>
+                <li><span class="sottolineato">Soluzioni con diritto di prelazione</span> = i processi in modalità kernel possono essere interrotti (interrupt sposta il controllo di flusso su un altro processo e poi terminerò il processo originario); questo comporta la disabilitazione dell’interrupt (grave!!!).</li>
+            </ul>
+            <p class="mb-1">Quindi una strategia è emulare le soluzioni software, usando LOCK (lucchetti di protezione) e istruzioni ATOMICHE (indivisibili) per manipolare questi lock; ci sono 2 tipi di istruzioni atomiche di lock:</p>
+            <ol type="a" class="mb-1">
+                <li><strong>TEST-AND-SET</strong> = setta e restituisce una  variabile di lock globale. È molto più facile della soluzione SW ma deve essere atomica (non interrompibile) e lenta (bust-waiting con spin-lock):
+                    <pre><strong>
+char lock;
+main() {
+    while(1){
+        while(TestAndSet(&lock));
+        SezioneCritica();
+        lock = FALSE;
+    }
+}
+char <strong class="text-warning">TestAndSet</strong>(char* lock) {
+    char val = *lock;
+    *lock = TRUE;
+    return val;
+}
+                    </strong></pre>
+                </li>
+                <li><strong>SWAP</strong> = scambia 2 variabili, di cui una di lock globale e una lock locale. È più facile della SW, ma anch’essa deve essere atomica e lenta (busy-waiting con spin-lock):
+                    <pre><strong>
+char lock;
+main() {
+    while(1){
+        char key = TRUE;
+        while(key) swap(&lock,&key);
+        SezioneCritica();
+        lock = FALSE;
+    }
+}
+void <strong class="text-warning">swap</strong>(char* v1, char* v2) {
+    char tmp = *v1;
+    *v1 = *v2;
+    *v2 = tmp;
+    return;
+}
+                    </strong></pre>
+                </li>
+            </ol>
+            <p class="mb-1">⚠️Entrambe le soluzioni HW potrebbero comportare starvation! Esiste una <mark>3^ soluzione senza starvation</mark>:</p>
+            <pre><strong>
+while(1) {
+    waiting[i] = TRUE;
+    while(waiting[i] && TestAndSet(&lock));
+    waiting[i] = FALSE;
+    SezioneCritica();
+    j = (i+1) % N;
+    while((j!=i) && (waiting[j] == FALSE)) j = (j+1) % N;
+    if (j==i) lock = FALSE;
+    else waiting[j] = FALSE;
+    SezioneNonCritica();
+}
+            </strong></pre>
+            <p>⚠️Dunque <span class="pro">Vantaggi HW</span>: utilizzabili nei multicore, estendibili a N processi (non solo 2 come le SW), semplici dal punto di vista SW (utente), simmetriche; al tempo stesso però <span class="contro">Svantaggi HW</span>: non facili dal punto di vista HW, starvation, busy-waiting con spin-lock!</p>
+        </li>
+        <li><strong class="text-warning">AD-HOC</strong> → l’OS fornisce funzioni e strutture dati, mentre il programmatore le usa opportunamente; risultano più semplici da usare e sono più efficienti. Un <strong>SEMAFORO</strong> (S) è una variabile intera condivisa (globale) protetta dall’OS, utilizzabile per inviare e ricevere segnali. L’atomicità delle operazioni sui semafori è garantita dall’OS. È impossibile per 2 processi eseguire operazioni contemporanee sullo stesso semaforo. Dato un semaforo (S), le operazioni standard fatte sul semaforo sono:
+            <ul class="livello3 mb-2">
+                <li><strong class="consolas">init (S, k)</strong> = definisce (alloca) e inizializza il semaforo al valore k. Esistono 2 tipi di semafori (binari [0,1] e con conteggio [numeri interi]);</li>
+                <li><strong class="consolas">wait (S)</strong> = permette (nella sezione di ingresso) di ottenere l’accesso della SC protetta dal semaforo S. Se il valore di S è negativo o nullo, blocca il processo chiamante (risorsa non disponibile); in ogni caso, decrementa il valore di S [da non confondere con la wait dei processi figli];</li>
+                <li><strong class="consolas">signal (S)</strong> = permette (nella sezione di uscita) di uscire dalla SC protetta dal semaforo S. Incrementa il semaforo [da non confondere con la signal del gestore dei segnali];</li>
+                <li><strong class="consolas">destroy (S)</strong> = libera il semaforo. Fa la free della variabile semaforica.</li>
+            </ul>
+            <p class="mb-2">⚠️Quindi nei <span class="text-warning">semafori binari</span> posso far accedere solo 1 processo per volta nella SC (perché solo 0 e 1); nei <span class="text-warning">semafori con conteggio</span> invece, ipotizzando di voler far accedere 2 processi alla SC, devo fare init(S,2) così la wait del P1 (processo 1) mi decrementa S=1 e la wait del P2 mi decrementa S=0 (in questo modo se un altro processo P3 vuole entrare nella SC, non può perché S=0, ma potrà farlo solo dopo la signal di P1).</p>
+            <p class="mb-2">⚠️Nei grafi di precedenza, il tratteggio lo possiamo ignorare per la proprietà <span class="sottolineato">transitiva</span> (perché se P2 fa wait di P1 e P3 fa wait di P2, allora P3 fa wait di P1 automaticamente [non devo mettere la wait(S2) dentro P3])!</p>
+            <p class="mb-2">⚠️Se i processi sono ciclici, dobbiamo usare un semaforo diverso per ogni processo sotto il processo iniziale (es. se da P0 partono P1, P2 e P3, devo usare S1, S2 e S3), altrimenti posso usare lo stesso semaforo per tutti e 3 i processi.</p>
+            <p class="mb-1">Nella pratica, i semafori vengono implementati con una struct contenente un contatore e una lista (coda) di processi (questo per non ricorrere all’attesa attiva “busy waiting” con spin-lock, delle altre soluzioni). Esistono diverse implementazioni reali dei semafori:</p>
+            <ul class="mb-2">
+                <li class="mb-2"><span class="text-warning">SEMAFORI TRAMITE PIPE</span> = data una pipe, il contatore del semaforo è realizzato con il token, la signal viene fatta con una write di un token sulla pipe (non bloccante) e la wait viene fatta con una read di un token dalla pipe (bloccante);</li>
+                <li class="mb-2"><span class="text-warning">SEMAFORI POSIX</span> = definiti nella libreria POSIX, 2 tipi: Unnamed semaphores [per la sincronizzazione dei thread in un processo, definiti nell’header semaphore.h] e Named semaphores (che non vedremo [per la sincronizzazione di processi]). Un semaforo è una variabile di tipo sem_t; le funzioni di manipolazione dei semafori (sem_*) tornano -1 in caso di errore; vediamole:
+                    <ul class="livello3">
+                        <li><strong class="consolas">int sem_init (sem_t *sem, int pshared, unsigned int value)</strong> = inizializza il semaforo al valore value, mentre se pshared=0, semaforo locale [condiviso tra threads], altrimenti semaforo condiviso [condiviso tra processi];</li>
+                        <li><strong class="consolas">int sem_wait (sem_t *sem)</strong> = come la wait vista prima, ovvero se semaforo==0, blocca il chiamante fino a quando può decrementare il valore del semaforo;</li>
+                        <li><strong class="consolas">int sem_trywait (sem_t *sem)</strong> = se semaforo==0, torna -1 (ma non blocca il chiamante);</li>
+                        <li><strong class="consolas">int sem_post (sem_t *sem)</strong> = come la signal vista prima, ovvero incrementa il valore del semaforo;</li>
+                        <li><strong class="consolas">int sem_getvalue (sem_t *sem, int *valP)</strong> = esamina il valore del semaforo;</li>
+                        <li><strong class="consolas">int sem_destroy (sem_t *sem)</strong> = distrugge un semaforo (torna -1 se  cerca di distruggere un semaforo usato da un altro processo).</li>
+                    </ul>
+                </li>
+                <li class="mb-2"><span class="text-warning">MUTEX PTHREAD</span> (MutEx → mutua esclusione) = semafori binari della libreria Pthread (tipo base pthread_mutex_t); funzioni:
+                    <ul class="livello3">
+                        <li><strong class="consolas">int pthread_mutex_init (pthread_mutex_t *mutex, pthread_mutexattr_t *attr)</strong> = crea un nuovo mutex con attributi specificati [torna 0 se successo];</li>
+                        <li><strong class="consolas">int pthread_mutex_lock (pthread_mutex_t *mutex)</strong> = controlla il valore del mutex e: blocca il chiamante se già locked, acquisisce il lock se non lo è [torna 0 se successo];</li>
+                        <li><strong class="consolas">int pthread_mutex_trylock (pthread_mutex_t *mutex)</strong> = come prima, ma non blocca il chiamante se il lock è già stato acquisito [torna 0 se lock è stato acquisito];</li>
+                        <li><strong class="consolas">int pthread_mutex_unlock (pthread_mutex_t *mutex)</strong> = rilascia il lock mutex al termine della SC [torna 0 se successo];</li>
+                        <li><strong class="consolas">int pthread_mutex_destroy (pthread_mutex_t *mutex)</strong> = rilascia la memoria occupata dal lock mutex (free) [torna 0 se successo].</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+    </ol>
+    <p class="mb-1"><mark>ESERCIZIO:</mark>Sia dato il seguente grafo di precedenza, dove ciascun task corrisponde a un thread. I thread sono tutti *ciclicli* e vengono creati e distrutti  una volta sola prima del ciclo principale. I semafori sono realizzati tramite libreria POSIX e tipi/funzioni sem_*.</p>
+    <pre>
+        A  &lt;--------
+        /  |  \       ^
+       /   |   \      |
+      B    C    D     |
+      |   / \   |     |
+      |  /   \  |     |
+      | E    F  |     |
+      |  \   /  |     |
+      |   \ /   |     |
+      |    G    H     |
+       \   |   /      |
+        \  |  /       |
+           I  ---------
+    </pre>
+    <pre><strong class="consolas">
+#include&lt;stdio.h>
+#include&lt;unistd.h>
+#include&lt;assert.h>
+#include&lt;stdlib.h>
+#include&lt;pthread.h>
+#include&lt;semaphore.h>
+
+sem_t semA, semB, semC, semD, semE, semF, semG, semH, semI;
+pthread_t tidA, tidB, tidC, tidD, tidE, tidF, tidG, tidH, tidI;
+
+// Processo A
+void* process_A(void* arg){
+    // ciclico
+    while(1) {
+        sem_wait(&semA);
+        printf("A\n");
+        sleep(2);
+        // vado a B, C e D
+        sem_post(&semB);
+        sem_post(&semC);
+        sem_post(&semD);
+    }
+}
+
+// Processo B
+void* process_B(void* arg){
+    // ciclico
+    while(1) {
+        sem_wait(&semB);
+        printf("B\n");
+        sleep(2);
+        // vado a I
+        sem_post(&semI);
+    }
+}
+
+// Processo C
+void* process_C(void* arg){
+    // ciclico
+    while(1) {
+        sem_wait(&semC);
+        printf("C\n");
+        sleep(2);
+        // vado a E e F
+        sem_post(&semE);
+        sem_post(&semF);
+    }
+}
+
+// Processo D
+void* process_D(void* arg){
+    // ciclico
+    while(1) {
+        sem_wait(&semD);
+        printf("D\n");
+        sleep(2);
+        // vado a H
+        sem_post(&semH);
+    }
+}
+
+// Processo E
+void* process_E(void* arg){
+    // ciclico
+    while(1) {
+        sem_wait(&semE);
+        printf("E\n");
+        sleep(2);
+        // vado a G
+        sem_post(&semG);
+    }
+}
+
+// Processo F
+void* process_F(void* arg){
+    // ciclico
+    while(1) {
+        sem_wait(&semF);
+        printf("F\n");
+        sleep(2);
+        // vado a G
+        sem_post(&semG);
+    }
+}
+
+// Processo G
+void* process_G(void* arg){
+    // ciclico
+    while(1) {
+        // aspetto E e F
+        sem_wait(&semG);
+        sem_wait(&semG);
+        printf("G\n");
+        sleep(2);
+        // vado a I
+        sem_post(&semI);
+    }
+}
+
+// Processo H
+void* process_H(void* arg){
+    // ciclico
+    while(1) {
+        sem_wait(&semH);
+        printf("H\n");
+        sleep(2);
+        // vado a I
+        sem_post(&semI);
+    }
+}
+
+// Processo I
+void* process_I(void* arg){
+    // ciclico
+    while(1) {
+        // aspetto B, G e H
+        sem_wait(&semI);
+        sem_wait(&semI);
+        sem_wait(&semI);
+        printf("I\n");
+        sleep(2);
+        // vado a A
+        sem_post(&semA);
+    }
+}
+
+// main come prima, ma tolgo il ciclo sui thread, non richiesto
+int main(int argc, char **argv){
+
+    // inizializzo i semafori POSIX
+    sem_init(&semA, 0, 1);
+    sem_init(&semB, 0, 0);
+    sem_init(&semC, 0, 0);
+    sem_init(&semD, 0, 0);
+    sem_init(&semE, 0, 0);
+    sem_init(&semF, 0, 0);
+    sem_init(&semG, 0, 0);
+    sem_init(&semH, 0, 0);
+    sem_init(&semI, 0, 0);
+
+    // creo i vari thread a cui passo il t_id e la funzione che devono svolgere, senza però farne un ciclo (1 sola volta richiesto)
+    pthread_create(&tidA, NULL, process_A, NULL);
+    pthread_create(&tidB, NULL, process_B, NULL);
+    pthread_create(&tidC, NULL, process_C, NULL);
+    pthread_create(&tidD, NULL, process_D, NULL);
+    pthread_create(&tidE, NULL, process_E, NULL);
+    pthread_create(&tidF, NULL, process_F, NULL);
+    pthread_create(&tidG, NULL, process_G, NULL);
+    pthread_create(&tidH, NULL, process_H, NULL);
+    process_I(NULL);
+    
+    // distruggo tutti i semafori
+    sem_destroy(&semA);
+    sem_destroy(&semB);
+    sem_destroy(&semC);
+    sem_destroy(&semD);
+    sem_destroy(&semE);
+    sem_destroy(&semF);
+    sem_destroy(&semG);
+    sem_destroy(&semH);
+    sem_destroy(&semI);
+    
+    return 0;
+}
+    </strong></pre>
+</div>
+{% endblock %}

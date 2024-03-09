@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block home_active %} active {% endblock %}
+
+{% block content %}
+<div class="row wrapperino justify-content-center">
+    {% for post in posts %}
+        {% if not materia_filter or post.materia == materia_filter %}
+            <div class="col-4 mb-3 text-center">
+                <a href="{{ url_for('post_html', id=post.id) }}" class="btn">
+                    <div class="card {% if post.materia == 'Reti di Calcolatori' %}text-white bg-primary {% elif post.materia == 'Basi di Dati' %}text-white bg-primary {% elif post.materia == 'Informatica-Python' %}text-white bg-primary {% elif post.materia == 'Teoria dei Segnali' %}text-white bg-danger {% elif post.materia == 'Algebra Lineare' %}text-white bg-danger {% elif post.materia == 'Analisi I' %}text-white bg-danger {% elif post.materia == 'Analisi II' %}text-white bg-danger {% elif post.materia == 'Metodi Matematici' %}text-white bg-danger {% elif post.materia == 'Calcolatori Elettronici' %}text-white bg-success {% elif post.materia == 'Fisica II' %}text-white bg-success {% elif post.materia == 'Fisica I' %}text-white bg-success {% elif post.materia == 'Chimica' %}text-white bg-success {% elif post.materia == 'Sistemi Operativi' %}text-white bg-warning {% elif post.materia == 'Algoritmi e Strutture Dati' %}text-white bg-warning {% elif post.materia == 'Introduzione al Web' %}text-white bg-warning {% elif post.materia == 'Tecniche di Programmazione-C' %}text-white bg-warning {% endif %}">
+                        <div class="card-header">{{ post.materia }}</div>
+                        <div class="card-body">
+                            <h5 class="card-title"><strong>{{ post.titolo }}</strong></h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% if loop.index % 3 == 0 %} {# Chiudi la riga dopo ogni terza card #}
+                </div><div class="row wrapperino justify-content-center">
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}

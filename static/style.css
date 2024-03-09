@@ -1,0 +1,236 @@
+/*! DA TOGLIERE */
+.under-nav {
+    margin-top: 60px;
+}
+
+
+/*! DA QUI SONO ROBE NUOVE DEL SITO, QUINDI OK!!!, color per tutto royalblue*/
+
+/* Importo OpenSans */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
+
+/* per tutte le immagine max-width*/
+img {
+    max-width: 100%;
+}
+
+/* per tutto il documento stesso font OpenSans */
+.total-page {
+    font-family: 'Open Sans', sans-serif;
+}
+
+/* stili dei link ai miei collegamenti */
+#link-wrapper-mobile a {
+    color:black;
+    text-decoration:none;
+    cursor: pointer;
+}
+
+#link-wrapper-mobile a:hover, a:focus {
+    color: royalblue;
+}
+
+/* colore del nome nell'aside*/
+.whoami {
+    color: black;
+}
+
+/* immagine di whoami*/
+.developer-img{
+    /* border radius per google */
+    -webkit-border-radius: 8px;
+    /* border radius per mozilla */
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    max-width: 200px;
+}
+
+aside {
+    position: fixed;
+}
+
+
+/* MEDIA QUERY PER FAR SCOMPARIRE L'IMMAGINE DELLO SVILUPPATORE SE SCHERMO PICCOLO e i testi */
+@media (min-width: 992px) {
+    .developer-img {
+      display: block;
+    }
+    .developer-txt {
+        display: block;
+      }
+    main {
+        margin-left: 250px;
+    }
+    
+}
+  
+@media (max-width: 991px) {
+    .developer-img {
+        display: none;
+    }
+    .developer-txt {
+        display: none;
+    }
+    aside {
+        position: static;
+    }
+}
+
+.like-button-pre {
+    /*position: fixed;
+    bottom: 20px;
+    right: 20px;*/
+    display: inline-block;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.like-button-post {
+    /*position: fixed;
+    bottom: 20px;
+    right: 20px;*/
+    display: inline-block;
+    background-color: black;
+    border: 1px solid #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.heart-icon {
+    display: inline-block;
+    font-size: 20px;
+    color: #e74c3c; /* Colore rosso di Font Awesome */
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.like-count {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.card {
+    border-color: black;
+    border-width: 0.3rem;
+}
+
+.card-header {
+    border-bottom-color: black;
+    border-bottom-width: 0.2rem;
+}
+
+.titolo_post_singolo {
+    font-size:4rem;
+}
+
+/* DIMENSIONI SINGOLA CARD A SECONDO DELLO SCHERMO */
+@media (min-width: 992px) {
+    .card {
+        width: 15rem;
+        height: 12rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 992px) {
+    .card {
+        width: 15.5rem;
+        height: 12rem;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 768px) {
+    .card {
+        width: 11.8rem;
+        height: 10.8rem;
+    }
+    .card-title {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .card {
+        width: 9rem;
+        height: 10rem;
+    }
+    .card-header {
+        font-size: 0.8rem;
+    }
+    .card-title {
+        font-size: 0.81rem;
+    }
+}
+
+/* NON ANDARE A CAPO LIKE */
+.nowrap {
+    white-space: nowrap;
+}
+
+/* ELENCHI PUNTATI DI LIVELLO 2 */
+ul.livello2 {
+    list-style-type: circle; /* Rimuovi il bullet */
+}
+
+ul.livello2 li:before {
+    content: none;
+}
+
+/* ELENCHI PUNTATI DI LIVELLO 3 */
+ul.livello3 {
+    list-style-type: square; /* Imposta il carattere quadratino nero come bullet */
+}
+
+ul.livello3 li:before {
+    content: none; /* Rimuovi il bullet personalizzato definito per il livello 2 */
+}
+
+
+/* Elenco puntato colore pro e contro */
+.pro {
+    color: green;
+}
+
+.contro {
+    color: red;
+}
+
+/* Testo articolo */
+.testo-articolo {
+    margin-top: 1.5rem;
+    text-align: justify;
+}
+
+/* SOTTOLINEATO */
+.sottolineato {
+    text-decoration: underline;
+}
+
+.contenitore-header-post {
+    border-radius: 6px;
+}
+
+/* IMMAGINI CENTRATE */
+.centro {
+    margin: 0 auto;
+}
+
+.go_back_n_2 {
+    max-width: 64%;
+}
+
+/* fare scomparire un elemento se lg */
+@media (min-width: 992px) {
+    .hide-lg {
+        display: none;
+    }
+}
+
+/* font-consolas per il codice */
+.consolas {
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+}

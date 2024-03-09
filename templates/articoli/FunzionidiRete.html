@@ -1,0 +1,193 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p>L’ITU-T (International Telecommunication Union) definisce <span class="text-primary">COMUNICAZIONE</span> = il trasferimento di informazioni secondo convenzioni, e <span class="text-primary">TELECOMUNICAZIONE</span> = trasmissione/ricezione di segnali che rappresentano informazioni. Definendo SERVIZIO = offerto da un gestore ai clienti per un’esigenza di telecomunicazione, vediamo le <span class="text-primary sottolineato">FUNZIONI</span> (in una rete) = operazioni svolte nella rete al fine di offrire servizi, tra cui:</p>
+    <ul>
+        <li><strong class="text-primary">SEGNALAZIONE</strong> (di UTENTE o di RETE) → segnalare alla rete di voler comunicare, ovvero trasferimento delle informazioni di controllo tra utente e rete (es. alzare la cornetta del telefono) [apertura, controllo, chiusura e gestione delle connessioni della rete];</li>
+        <li><strong class="text-primary">COMMUTAZIONE</strong> → individuare le risorse necessarie per connettere 2 utenti per il tempo necessario al trasferimento dei segnali, mediante unità funzionali (terminali [telefoni], centrali di smistamento [nodi di commutazione]), canali di trasmissione e circuiti di telecomunicazione;</li>
+        <li><strong class="text-primary">TRASMISSIONE</strong> → i 2 utenti possono comunicare, ovvero trasferimento di segnali da 1 punto ad 1 o più punti;</li>
+        <li><strong class="text-primary">GESTIONE</strong> → allacciamento di nuovi utenti (modifica e aggiunta di apparati e/o canali), sostituzione di vecchi apparati con moderni, gestione guasti, monitoraggio, controllo.</li>
+    </ul>
+    <p class="mb-1">Parlando della <strong class="text-primary">TOPOLOGIA DELLE RETI</strong> (disposizione di insieme di nodi [di commutazione] e segmenti [canali] che fornisce un collegamento tra 2 o più punti) abbiamo:</p>
+    <ul>
+        <li><span class="text-primary">MEZZO TRASMISSIVO</span> = mezzo fisico per trasportare segnali tra 2 o più punti;</li>
+        <li><span class="text-primary">CANALE</span> = insieme di 1 o più mezzi trasmissivi concatenati.</li>
+    </ul>
+    <p class="mb-1">Altre definizioni utili sono:</p>
+    <ul>
+        <li><span class="text-primary">BANDA</span> = bit al secondo (Bit Rate [bit/s]);</li>
+        <li><span class="text-primary">CAPACITÁ</span> = per il singolo mezzo trasmissivo è la massima banda (massima velocità trasmissiva [bit/s]), mentre per il canale è la capacità del mezzo più lento al suo interno (“bottleneck”);</li>
+        <li><strong class="text-primary">TRAFFICO</strong>:
+            <ul class="livello2">
+                <li><span class="text-primary">OFFERTO</span> = bit/s che una sorgente cerca di inviare in rete;</li>
+                <li><span class="text-primary">SMALTITO</span> (throughput) = parte di traffico offerto che riesce ad essere consegnata a destinazione [dunque evidente che throughput ≤ capacità del canale e throughput ≤ traffico offerto].</li>
+            </ul>
+        </li>
+    </ul>
+    <p class="mb-1">Ritornando sulla topologia delle reti, abbiamo 3 tipi di canali:</p>
+    <ul>
+        <li><span class="text-primary">PUNTO-PUNTO</span> = 2 nodi collegati agli estremi del canale, usato in modo paritetico (entrambi i versi);</li>
+        <li><span class="text-primary">MULTI-PUNTO</span> = 1 nodo centrale e tanti nodi periferici;</li>
+        <li><span class="text-primary">BROADCAST</span> = unico canale condiviso da tutti i nodi (informazione inviata da un nodo è ricevuta da tutti gli altri). Se i dati trasmessi contengono l’indirizzo del nodo destinazione, realizzo un punto-punto;</li>
+    </ul>
+    <p class="mb-1">E vediamo che possiamo descrivere la topologia di una rete con un <strong>GRAFO</strong> G = (V, A) con V = insieme dei nodi e A = insieme degli archi (canali); gli archi possono essere orientati (unidirezionali) e non orientati (bidirezionali); definiamo N = |V| = n° nodi, e C = |A| = n° canali (archi). Ci sono diverse <span class="text-primary sottolineato">TOPOLOGIE DI RETE</span>:</p>
+    <ul>
+        <li><strong class="text-primary">A MAGLIA COMPLETA</strong> → C = N(N-1)/2
+            <ul class="livello2">
+                <li class="pro">Pro: <span class="text-dark">tollerante ai guasti (molti percorsi alternativi, ma 1 solo percorso minimo [ovvero 1 solo canale])</span></li>
+                <li class="contro">Contro: <span class="text-dark">tanti canali (usata solo con pochi nodi)</span></li>
+            </ul>
+        </li>
+        <li><strong class="text-primary">AD ALBERO</strong> → C = N-1
+            <ul class="livello2">
+                <li class="pro">Pro: <span class="text-dark">pochi canali (riduco i costi e semplifico i canali)</span></li>
+                <li class="contro">Contro: <span class="text-dark">vulnerabile ai guasti (solo 1 percorso tra 2 nodi)</span></li>
+            </ul>
+        </li>
+        <li><strong class="text-primary">A STELLA ATTIVA</strong> → C = N
+            <ul class="livello2">
+                <li class="pro">Pro: <span class="text-dark">pochi canali e gestione dei percorsi fatta dal centro stella</span></li>
+                <li class="contro">Contro: <span class="text-dark">vulnerabile ai guasti del centro stella (solo 1 percorso tra 2 nodi)</span></li>
+            </ul>
+        </li>
+        <li><strong class="text-primary">A STELLA PASSIVA</strong> → C = 1 (N fili che si comportano come 1 solo canale)
+            <ul class="livello2">
+                <li class="pro">Pro: <span class="text-dark">pochi canali (unico canale [broadcast])</span></li>
+                <li class="contro">Contro: <span class="text-dark">vulnerabile ai guasti del centro stella (solo 1 percorso possibile per nodo)</span></li>
+            </ul>
+        </li>
+        <li><strong class="text-primary">A MAGLIA SEMPLICE</strong> → N-1 < C < N(N-1)/2 [topologia più usata, es. Internet]
+            <ul class="livello2">
+                <li class="pro">Pro: <span class="text-dark">tolleranza ai guasti e numero di canali selezionabile</span></li>
+                <li class="contro">Contro: <span class="text-dark">instradamento [ricerca di percorsi] complesso (+ percorsi alternativi)</span></li>
+            </ul>
+        </li>
+        <li><strong class="text-primary">AD ANELLO</strong> → C = N/2 (unidirezionale) e C = N (bidirezionale)
+            <ul class="livello2">
+                <li class="pro">Pro: <span class="text-dark">1 o 2 percorsi possibili per ogni coppia di nodi</span></li>
+                <li class="contro">Contro: <span class="text-dark">solo l’anello bidirezionale assicura la sopravvivenza della rete in caso di guasto (ma a capacità dimezzata) [l’anello bidirezionale è la + semplice topologia che consente instradamento alternativo per i guasti]</span></li>
+            </ul>
+        </li>
+        <li><strong class="text-primary">A BUS</strong> → C = N-1 (bus attivo) e C = 1 (bus passivo)
+            <ul class="livello2">
+                <li class="contro">Contro: <span class="text-dark">1 solo percorso tra 2 nodi (obsoleto ormai)</span></li>
+            </ul>
+        </li>
+    </ul>
+    <p class="mb-1">A livello di <strong class="text-primary">SERVIZI</strong>, le reti possono essere DEDICATE (unico servizio) e INTEGRATE (più servizi) [ci sono servizi portanti o teleservizi]; ci sono 2 MODELLI di accesso ai servizi:</p>
+    <ol>
+        <li><span class="text-primary sottolineato">CLIENT-SERVER</span> → 2 ruoli ben distinti: CLIENT (inizia l’interazione con il server richiedendo un servizio) e SERVER (fornisce al client il servizio, dunque informazione contenuta nel server) [app Web]. I server vengono attivati all’accensione del computer su cui sono installati, sono sempre disponibili e in attesa delle richieste dei client; i client invece vengono attivati nel momento in cui l’utente richiede un servizio e si disattivano una volta terminato il servizio.</li>
+        <li><span class="text-primary sottolineato">PEER-TO-PEER</span> → tutti gli applicativi sono paritetici (informazioni condivise) [telefono, torrent].</li>
+    </ol>
+    <p class="mb-1">Per trasmettere il segnale, abbiamo <strong class="text-primary">TRASMISSIONE</strong>:</p>
+    <ul class="mb-1">
+        <li><span class="text-primary">PARALLELA</span> = 1 bit alla volta su ogni cavo (+ cavi);</li>
+        <li><span class="text-primary">SERIALE</span> = serializzo l’informazione e trasmetto 1 bit alla volta.</li>
+    </ul>
+    <p class="mb-1">E per quanto riguarda la sincronizzazione, una trasmissione può essere:</p>
+    <ul>
+        <li><span class="text-primary">ASINCRONA</span> = ogni byte è trasmesso separatamente dagli altri, usando dei segnali di temporizzazione (ad ogni ricezione occorre recuperare il sincronismo);</li>
+        <li><span class="text-primary">SINCRONA</span> = le informazioni da trasmettere sono organizzate in “trame”. Trasmettitore e ricevitore sincronizzano i loro clock prima della trasmissione e li mantengono sincronizzati durante la trama.</li>
+    </ul>
+    <p class="mb-2">Per il <strong>TRASFERIMENTO</strong>, le reti possono essere basate su:</p>
+    <ol>
+        <li><strong class="text-primary">CONDIVISIONE DI CANALE</strong> (solo strato 1):
+            <ol style="list-style-type: upper-alpha;">
+                <li><span class="text-primary sottolineato">MULTIPLAZIONE</span> = tutti i flussi di informazione sono disponibili in unico punto:
+                    <ul class="livello2">
+                        <li><span class="text-primary">DI FREQUENZA</span> (FDM-FDMA) → separazione ottenuta usando bande di frequenza diverse [es. radio e televisione]. Ci sono delle bande di guardia per evitare l’invasione non voluta di altre frequenze;</li>
+                        <li><span class="text-primary">DI TEMPO</span> (TDM-TDMA) → separazione mediante intervalli di tempo diversi [es. interrompere qualcuno che parla per parlare noi]. Ci sono tempi di guardia per attutire il fenomeno dei ritardi di trasmissione dovuti alle diverse distanze tra trasmettitore e ricevitori;</li>
+                        <li><span class="text-primary">DI CODICE</span> (CDM-CDMA) → separazione mediante usando codifiche diverse [es. persone che si parlano sopra, ma se sono di lingue diverse non si sovrappongono]. Garantisce resistenza a disturbi, ma servono codici riconoscibili;</li>
+                        <li><span class="text-primary">DI SPAZIO</span> → sfruttare lo spazio del sistema per far coesistere più flussi di informazione in punti diversi [es. 2 oratori che parlano in 2 piazze diverse];</li>
+                        <li><span class="text-primary">STATISTICA</span> → assegnare una stessa frequenza, tempo, codice o spazio a 2 o più sorgenti intermittenti in contemporanea perché probabilisticamente queste non trasmettono insieme.</li>
+                    </ul>
+                </li>
+                <li><span class="text-primary sottolineato">ACCESSO MULTIPLO</span> = i flussi di informazione accedono al canale da punti differenti.</li>
+            </ol>
+        </li>
+        <li class="mt-3"><strong class="text-primary">CONDIVISIONE DI NODO</strong> [ricordando commutazione = processo di allocazione delle risorse necessarie all’interconnessione e al trasferimento delle informazioni]:
+            <ol style="list-style-type: upper-alpha;">
+                <li class="mt-2"><span class="text-primary sottolineato">COMMUTAZIONE DI CIRCUITO</span> = se i flussi sono continui [es. telefonia]. La rete alloca un intero CIRCUITO (collegamento fisico tra 2 terminali di utenti) ad ogni richiesta di servizio; il circuito è esclusivo dei 2 utenti per tutta la durata della comunicazione (“svincolato” solo una volta finita la comunicazione).
+                <span class="pro">Pro:</span>
+                <ul class="livello2">
+                    <li>banda costante garantita (ovvero velocità di trasferimento costante)</li>
+                    <li>ritardi di trasferimento costanti</li>
+                    <li>bassi ritardi nell’attraversamento dei nodi</li>
+                    <li>circuito "trasparente"</li>
+                </ul>
+                <span class="contro">Contro:</span>
+                <ul class="livello2">
+                    <li>efficienza buona solo per sorgenti continue</li>
+                    <li>tempo di apertura del circuito</li>
+                    <li>nessuna possibilità di convertire i dati scambiati</li>
+                    <li>tariffazione in base al tempo di esistenza del circuito</li>
+                </ul>
+                </li>
+                <li class="mt-2"><span class="text-primary sottolineato">COMMUTAZIONE DI PACCHETTO</span> = se i flussi sono intermittenti [es. trasmissione di file]. Il funzionamento è analogo alle “poste”. L’informazione da trasferire è organizzata in PDU (Protocol Data Unit, che chiamiamo PACCHETTO, unità dati o cella) con al loro interno PCI (header o parte di CONTROLLO) e SDU (DATI da inviare, l’informazione che l’utente vuole inviare).
+                Ogni nodo di commutazione di pacchetto della rete fa lo “STORE AND FORWARD” memorizza il pacchetto, lo elabora, determina su quale canale inoltrarlo e lo mette in coda per la trasmissione su quel canale (una sorta di buffer); questo processo serve per disporre l’intestazione prima di fare l’instradamento, introdurre dei bit di protezione dagli errori (sempre sull’intestazione) e gestire le diverse capacità dei mezzi trasmissivi (che richiedono trasmissioni a bit rate diversi).
+                L’informazione di un utente può essere troppo grande e quindi dover essere frazionata in pacchetti (di dimensione fissa o variabile). Definiamo quindi i ritardi dovuti al:
+                    <ul>
+                        <li><span class="sottolineato">CANALE</span>:
+                            <ul class="livello2">
+                                <li>RITARDO DI TRASMISSIONE = tempo che trasmettitore impiega per mandare i segnali di tutto il pacchetto [dipende dalla dimensione in bit del pacchetto e dalla velocità del canale];</li>
+                                <li>RITARDO DI PROPAGAZIONE = tempo che ha impiegato il segnale per andare da sorgente a destinazione (uguale per ogni bit di pacchetto, ovvero costante nel canale) [dipende dalla dimensione in metri del canale];</li>
+                            </ul>
+                        </li>
+                        <li><span class="sottolineato">NODO</span>:
+                            <ul class="livello2">
+                                <li>RITARDO DI ELABORAZIONE [dipende dalla velocità di instradamento e di controlli sul pacchetto];</li>
+                                <li>RITARDO DI ACCODAMENTO = ritardo dovuto alla coda [dipende dal traffico sulla coda].</li>
+                            </ul>
+                        </li>
+                    </ul>
+                <p class="mt-2 mb-1">La <strong>LUNGHEZZA DEI PACCHETTI</strong> è determinata da alcuni fattori:</p>
+                <ol style="list-style-type: lower-alpha;" class="mb-1">
+                    <li>possibilità di PARALLELIZZAZIONE (PIPELINE) = rende più veloce l’invio parallelo dei pacchetti (rispetto ad un unico grosso file), riducendo la latenza di attraversamento dei nodi (che si può ulteriormente ridurre aumentando la velocità di trasmissione) [quindi pacchetti brevi];</li>
+                    <li>RITARDO DI PACCHETTIZZAZIONE = pacchetti brevi riducono questo ritardo;</li>
+                    <li>PERCENTUALE DI INFORMAZIONE DI CONTROLLO (o frazione di informazione di controllo) = se ho pacchetti lunghi servono meno informazioni di controllo perché non devo riscriverle per ogni singolo pacchetto;</li>
+                    <li>PROBABILITÁ DI ERRORE = pacchetti corti riducono la probabilità di errore (in quanto anche solo l’errore su 1 singolo bit invalida il pacchetto, quindi più grosso è il pacchetto, maggiore sarà l’informazione invalidata in presenza di errore).</li>
+                </ol>
+                <span class="pro">Pro:</span>
+                <ul class="livello2">
+                    <li>utilizzo efficiente delle risorse con sorgenti intermittenti</li>
+                    <li>controllo degli errori lungo il percorso</li>
+                    <li>possibilità di conversioni</li>
+                    <li>tariffazione in base al traffico trasmesso</li>
+                </ul>
+                <span class="contro">Contro:</span>
+                <ul class="livello2 mb-2">
+                    <li>non garanzie di banda (throughput)</li>
+                    <li>elaborazione di ogni pacchetto in ogni nodo</li>
+                    <li>ritardo di trasferimento variabile</li>
+                </ul>
+                Sempre nella commutazione di pacchetto, ci sono 2 modi di trasferimento:
+                <ul>
+                    <li><strong class="text-primary">DATAGRAM</strong> = quella vista finora, dove i nodi trattano ogni pacchetto in modo indipendente (infatti pacchetti con uguale sorgente e destinazione possono seguire percorsi diversi);</li>
+                    <li><strong class="text-primary">CIRCUITO VIRTUALE</strong> = si avvicina alla commutazione di circuito, ma è diverso perché non si allocano le risorse per una singola comunicazione (per questo “virtuale”). La comunicazione è divisa in 3 fasi, ovvero apertura connessione [segnalazione] - trasferimento dati - chiusura [segnalazione]. Qui pacchetti con uguale sorgente e destinazione seguono lo stesso percorso (in questo modo bypasso il dover applicare l’algoritmo di instradamento ad ogni pacchetto con lo stesso percorso). Inoltre nel datagram si identifica in ogni pacchetto la coppia sorgente/destinazione con identificatori globali, mentre nel circuito virtuale si identifica il circuito con  identificatori locali (etichette [non si usa sempre la stessa]) [sorgente/destinazione usata per l’apertura del circuito].</li>
+                </ul>
+                </li>
+            </ol>
+        </li>
+    </ol>
+    <p class="mb-1">Per quanto riguarda la <strong class="text-primary">SEGNALAZIONE</strong> si distinguono segnalazioni di utente (scambio di informazioni tra utente e nodo) e segnalazioni internodali (di rete); la segnalazione può essere:</p>
+    <ol>
+        <li><span class="text-primary">ASSOCIATA AL CANALE</span> = corrispondenza biunivoca tra canale controllante (informazioni di segnalazione) e canale controllato (informazioni di utente). Ce ne sono 2 tipi:
+            <ol style="list-style-type: lower-alpha;">
+                <li>IN BANDA → canale controllante e controllato coincidono, ma sono usati in tempi diversi con TDM (multiplazione di tempo) [telefonia mobile];</li>
+                <li>FUORI BANDA → canale controllante e controllato sono distinti.</li>
+            </ol>
+        </li>
+        <li><span class="text-primary">A CANALE COMUNE</span> = 1 canale di segnalazione (che funziona a pacchetto) controlla più canali di informazioni di utente [telefonia fissa].</li>
+    </ol>
+    <p class="mb-1">Per quanto riguarda le <span class="text-primary">SORGENTI DI INFORMAZIONE</span> abbiamo:</p>
+    <ul>
+        <li>ANALOGICHE [voce, video, …] → caratterizzate dalle loro caratteristiche spettrali;</li>
+        <li>NUMERICHE/NUMERIZZATE [dati, voce numerizzata, etc…] → caratterizzate dalla velocità di cifra e dalla loro impulsività. Ce ne sono 2 tipi:
+            <ul class="livello2">
+                <li>CBR (Constant Bit Rate = velocità costante) [telefonia, videoconferenze, …] → caratterizzate dalla velocità, durata, processo di generazione delle chiamate;</li>
+                <li>VBR (Variable Bit Rate = velocità variabile) [file transfer, video streaming, …] → caratterizzate dalla velocità di picco , velocità media, durata, processi di generazione delle chiamate.</li>
+            </ul>
+        </li>
+    </ul>
+</div>
+{% endblock %}

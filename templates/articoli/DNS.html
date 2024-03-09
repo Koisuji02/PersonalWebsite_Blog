@@ -1,0 +1,33 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p>Il <strong class="text-primary">DNS</strong> (Domain Name System) è un protocollo di livello applicazione; è un database distribuito implementato nella gerarchia dei nomi dei server. Non sono i router a processare i messaggi del DNS, ma sono i server che sono all’edge che traducono l’indirizzo web scritto a parole in indirizzi IP effettivi; i router fanno semplicemente “forwarding” di questi messaggi.</p>
+    <p><mark>Perché è distribuito e non centralizzato il DNS?</mark> Perché ci sarebbe un single point of failure (ovvero errore sul centralizzato = errore su tutto) e ci sarebbe una congestione sul DNS (troppo traffico sul DNS): quindi un DNS centralizzato non scalerebbe.</p>
+    <p class="mb-1"><mark>Com’è fatto questo DNS distribuito?</mark> Abbiamo una struttura gerarchica dei server: alla radice troviamo i <strong class="text-primary">ROOT SERVER</strong> (ovvero i punti di accesso a questa struttura gerarchica che hanno il compito di puntare ai top level domain server [domini di 1° livello]); preso un indirizzo web tipo www.facebook.com, i top level domain server [domini di 1° livello, <strong class="text-primary">TLD</strong>] sono l’ultimo tratto dell’indirizzo. Questi contengono sottodomini, come di 2° livello (es. facebook in questo caso) e www. Il puntino non necessariamente divide 2 sottolivelli (es. se chiamo www.polito.dauin.ciao.it magari dauin.ciao è una cosa unica, punto fittizio).</p>
+    <p>I server del 3° livello sono <strong class="text-primary">SERVER AUTORITATIVI</strong> (avrò un server autoritativo per yahoo.com, un altro per poli.edu etc…) che contengono l’associazione tra nome sito e indirizzo IP (ci pensa il provider); questi server però avranno anche altri server se ci sono altri sottodomini (avrò n server per gli n sottodomini). <mark>Ogni server conosce gli indirizzi IP dei suoi sottodomini per puntare a questi</mark> (es. i root server dovranno conoscere gli indirizzi IP dei domini di 1° livello, quelli di 1° dovranno conoscere gli indirizzi IP dei domini di 2° livello, etc…).</p>
+    <div class="row mb-3">
+        <div class="col-2"></div>
+        <img class="img-fluid col-8" src="{{url_for('static', filename='DNS1.png')}}" alt="DNS1">
+        <div class="col-2"></div>
+    </div>
+    <p>I ROOT SERVER dovranno essere tutti <span class="sottolineato">uguali tra loro</span> (perché devono permettermi da ogni parte del mondo di accedere ugualmente ai vari server dei sottodomini, in maniera coerente); questo però non comporta una gestione problematica della sincronizzazione tra i vari root server a causa di una modifica, perché le modifiche a cui sono soggetti i root server avvengono quando cambiano gli indirizzi IP dei top level domain o quando viene aggiunto un top level domain (perciò quasi mai avvengono delle modifiche), e non quando viene modificata una pagina web (deve cambiare solo il suo IP, del contenuto della pagina non ci interessa se l’IP rimane costante).</p>
+    <p class="mb-1">Fuori dalla struttura gerarchica, troviamo i <strong class="text-primary">LOCAL DNS Server</strong>; questi si occupano della CACHE del DNS (i nostri dispositivi hanno una CACHE DNS che contiene gli ultimi messaggi con il server autoritativo, in modo da non richiederli se provo a riaccedere a quel sito; ma oltre ai nostri dispositivi anche i LOCAL DNS hanno una cache per fare ciò). Dato che tutti accediamo sempre agli stessi siti, ogni rete userà praticamente solo gli indirizzi nella sua cache. Infatti tutti i nostri “home gateway” contengono una local dns server, ma anche il provider avrà un local dns server.</p>
+    <p class="mb-1">Per quanto riguarda la <strong>risoluzione DNS dei nomi dei siti</strong> (ovvero l’intero processo di comunicazione di come il DNS riceve il nome del sito richiesto, lo trasforma nell’indirizzo IP e lo ridà al client che ha fatto la richiesta), ci sono 2 modalità:</p>
+    <ul>
+        <li><span class="text-primary">Iterativa</span> → il client chiede al LOCAL DNS server, che sta al centro delle comunicazioni con i vari server;</li>
+        <li><span class="text-primary">Ricorsiva</span> → il client chiede al LOCAL DNS server, che però inoltra la richiesta sul root server e così via.</li>
+    </ul>
+    <div class="row mb-3">
+        <div class="col-1"></div>
+        <img class="img-fluid col-10" src="{{url_for('static', filename='DNS2.png')}}" alt="DNS2">
+        <div class="col-1"></div>
+    </div>
+    <p>Cosa succederebbe alle richieste nel LOCAL DNS Server se Google cambiasse indirizzo IP (visto che il local server è fuori dalla gerarchia)? Nella tabella dei server autoritativi troviamo gli RR (Resource Records) nel formato (key, value, type, ttl) dove key (o name) = chiave (nome), value = valore, ttl = TimeToLive (usato dalla cache per sapere quanto tempo può tenere l’associazione chiave-valore). Il problema quindi si può risolvere mettendo a zero il TTL (quindi si riandrà a prendere dal server l’indirizzo IP e non dalla cache). Ultimo campo è il <strong>type</strong>, che modifica il significato dei campi key e value; può essere:</p>
+    <ul class="livello2">
+        <li>A → key = nome dell’host, value = indirizzo IP (unico tipo con nome diretto, senza passare da nomi intermedi);</li>
+        <li>NS → key = dominio, value = hostname del server autoritativo;</li>
+        <li>CNAME → key = alias (es. www.ibm.com è un alias perché il vero nome è servereast.backup2.ibm.com), value = vero nome (in questo caso sarebbe appunto servereast.backup2.ibm.com);</li>
+        <li>MX → value = nome del mailserver associato con la key.</li>
+    </ul>
+</div>
+{% endblock %}

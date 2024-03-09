@@ -1,0 +1,98 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p>Il <strong class="text-primary">MEZZO TRASMISSIVO</strong> ottimale è caratterizzato da resistenza, capacità parassite e impedenza basse, resistenza alla trazione, flessibilità, facilità di collegamento dei ricetrasmittori. Vediamo i diversi mezzi trasmissivi usati fino ad oggi:</p>
+    <ul>
+        <li>Il mezzo trasmissivo classico della telefonia è il <strong class="text-primary">DOPPINO</strong> (o coppia, “pair”, CAVO ETHERNET), composto da 2 fili di rame ritorti (binati, “twisted”) per ridurre le interferenze elettromagnetiche; ci sono 2 fili perché il segnale viene inviato come differenza delle tensioni dei 2 fili (V1-V2). Raggiunge velocità nell'intorno del Gbit/s.
+            <div class="row mt-2 mb-2">
+                <div class="col-3"></div>
+                <img class="img-fluid col-6" src="{{url_for('static', filename='doppino.png')}}" alt="doppino">
+                <div class="col-3"></div>
+            </div>
+        </li>
+        <li>Altro mezzo trasmissivo è il <strong class="text-primary">CAVO COASSIALE</strong> (usato maggiormente in passato), composto da un connettore centrale e 1 o più calze di schermo (maggiore schermatura, ma maggiori costi, difficoltà di installazione e meno velocità [Mbit/s]).</li>
+        <li>Altro mezzo trasmissivo (ma non elettrico, bensì OTTICO) è la <strong class="text-primary">FIBRA OTTICA</strong>, ovvero un minuscolo e flessibile filo di vetro costituito da 2 parti, CORE e CLADDING, con indici di rifrazione diversi; in questo modo, per la legge di Snell, il raggio luminoso introdotto nella fibra entro un certo “angolo di accettazione” si propaga confinato nel core, sbattendo nelle pareti di core e cladding. Vengono posati sul fondo del mare proprio grazie al fatto che non passa elettricità al loro interno.
+            <p class="pro mb-0 mt-0">Pro:</p>
+            <ul class="livello2">
+                <li>Totale immunità da disturbi elettromagnetici (in quanto trasmetto luce, non segnale elettrico);</li>
+                <li>Alta capacità trasmissiva (Tbit/s);</li>
+                <li>Bassa attenuazione;</li>
+                <li>Dimensione e costi contenuti.</li>
+            </ul>
+            <span class="contro">Contro:</span>
+            <ul class="livello2">
+                <li>Solo collegamenti punto-punto;</li>
+                <li>Difficili i collegamenti;</li>
+                <li>Poca curvatura e soffre vibrazioni.</li>
+            </ul>
+        </li>
+        <li>Altro mezzo è il <strong class="text-primary">CANALE RADIO</strong> (“etere”), ovvero la trasmissione mediante le antenne; se almeno uno tra trasmettitore (TX) e ricevitore (RX) è in movimento, si parla di canale RADIOMOBILE. Dato che però la propagazione non è ideale, la potenza ricevuta reale è soggetta ad attenuazione dovuta a fenomeni atmosferici, interferenze, ostacoli; specialmente gli ostacoli comportano riflessioni e rifrazioni, che producono copie del segnale trasmesso (disturbando la ricezione e generando FADING [variazione veloce del segnale dovuta all’azione delle copie ricevute da percorsi diversi] e SHADOWING [variazione lenta dell’ampiezza del segnale]).</li>
+    </ul>
+    <p>Per quanto riguarda la <span class="text-primary sottolineato">TRASMISSIONE A DISTANZA</span>, questa si realizza associando bit o simboli di informazione a segnali diversi; si usano tecniche diverse a seconda del mezzo fisico usato:</p>
+    <ol>
+        <li><strong class="text-primary">CODIFICHE DI LINEA</strong> (mezzi elettrici, ottici) = rappresentazione di informazioni digitali con segnali digitali. A seconda del riferimento di tensione del segnale, abbiamo codifiche:
+            <ul>
+                <li><span class="text-primary">UNIPOLARI</span> → semplici (primitive); usano tensione nulla = 0 e tensione positiva = 1. Poco usata a causa dei filtri, perdita di sincronismo (se trasmetto lunghe sequenze dello stesso simbolo), sovraccarico del LED di trasmissione nei mezzi ottici (con lunghe sequenze di 1 [luce]);</li>
+                <li><span class="text-primary">POLARI</span> → 2 livelli di tensione con polarità diverse (si quantizza/discretizza maggiormente [meno componente continua in ampiezza]); ci sono 3 varianti:
+                    <ul class="livello2">
+                        <li>NRZ (Non-Return-to-Zero) = non transizione su tensione nulla nel passaggio tra 2 bit consecutivi;</li>
+                        <li>RZ (Return-to-Zero) = transizione su tensione nulla nel passaggio tra 2 bit consecutivi;</li>
+                        <li>Bifase = ogni bit rappresentato da 2 livelli di tensione di polarità inversa (più usata nei mezzi elettrici).</li>
+                    </ul>
+                </li>
+                <li><span class="text-primary">BIPOLARI</span> → si usa tensione nulla = 0 e 2 polarità opposte per l’1 (usate alternativamente, da cui la codifica è detta AMI [Alternate Mark Inversion]). Queste codifiche permettono l’uso di simboli ternari [-1, 0, 1], come nella codifica 8B6T (8 bit codificati con 6 simboli ternari, ovvero 2^8 = 256 sequenze codificate con 3^6 = 729 sequenze, da cui posso scegliere le migliori codifiche scartando le altre [dunque non si legge il singolo bit, ma si usa un dizionario in cui ho le sequenze associate alle migliori sequenze di codifica]);</li>
+                <li><span class="text-primary">nBmB</span> → codifiche in cui simboli di n bit sono rappresentati da m bit (con n&lt;m). Sono molto usate perchè richiedono meno banda delle codifiche polari, permettono il controllo sulla scelta delle parole di codice (limitando quelle con troppi 0 o 1 consecutivi), limita la componente continua, fornisce caratteri speciali per la delimitazione dei pacchetti.</li>
+            </ul>
+        </li>
+        <li class="mt-2"><strong class="text-primary">MODULAZIONI DIGITALI</strong> (mezzi radio, elettrici, ottici) = rappresentazione di informazioni digitali con segnali analogici. Si usano per i segnali ondulatori (perché non si può usare la codifica di linea con le variazioni/impulsi); l’informazione del segnale portante (“carrier”) è legata alle variazioni di ampiezza, frequenza, fase o le loro combinazioni (variazioni codificate in un segnale modulante).Abbiamo quindi le modulazioni digitali:
+            <ul class="livello2">
+                <li><span class="text-primary">ASK</span> (Amplitude Shift Keying) = modulazione di ampiezza;</li>
+                <li><span class="text-primary">FSK</span> (Frequency Shift Keying) = modulazione di frequenza;</li>
+                <li><span class="text-primary">PSK</span> (Phase Shift Keying) = modulazione di fase;</li>
+                <li><span class="text-primary">QAM</span> (Quadrature Amplitude Modulation) = ampiezza+fase.</li>
+            </ul>
+        <p class="mb-1">Oltre alla sigla troviamo il numero di simboli del segnale modulante (es. 8-PSK = modulazione di fase a 8 simboli [ogni simbolo rappresenta 3 bit]).</p>
+        <p>⚠️Modulazioni con tanti simboli (maggiori bitrate) si possono usare solo se il canale non distorce eccessivamente il segnale ricevuto!</p>
+        </li>
+    </ol>
+    <p>Un utente si collega ad una rete sfruttando la <strong>RETE DI ACCESSO</strong> (apparati e mezzi trasmissivi che collegano l’utente con il nodo di accesso del gestore di servizi TLC) e la <strong>RETE DI TRASPORTO</strong> (apparati e mezzi trasmissivi appartenenti ad 1 o più gestori di servizi di TLC, destinati al transito di dati tra 2 nodi di accesso).</p>
+    <p>Parlando delle <strong class="text-primary">RETI DI ACCESSO</strong> (di tipo residenziale, mobile o istituzionale) è l’ultima tratta della rete per arrivare all’utenza residenziale (in inglese “local loop”); le principali tecnologie nelle reti di accesso sono:</p>
+    <ul>
+        <li><span class="text-primary sottolineato">DSL</span> (Digital Subscriber Line) → fornisce servizio dati ad alta velocità; la 1^ diffusa è stata l’ADSL (Asymmetric DSL) [+ veloce in DOWNSTREAM (transito dei dati dalla rete all’utente) che in UPSTREAM (transito dei dati dall’utente alla rete)]. Per l’accesso alla rete si usa un <span class="sottolineato">MODEM</span> (Modulatore e Demodulatore). La DSL fa trasmissioni dei dati usando i cavi della rete telefonica pubblica [quindi il bitrate dipende anche dal cavo e dalla distanza dall’armadio di strada (“cabinet”)].
+            <div class="row mt-2 mb-2">
+                <div class="col-2"></div>
+                <img class="img-fluid col-8" src="{{url_for('static', filename='DSL.png')}}" alt="DSL">
+                <div class="col-2"></div>
+            </div>
+            <p>Infatti lo <span class="sottolineato">SPLITTER</span> (filtro) effettua la MULTIPLAZIONE IN FREQUENZA per separare voce (frequenza alta), dati (frequenza bassa) in downstream (più banda) e dati in upstream (meno banda); il DLSAM multipla poi le comunicazioni verso il gestore (Internet Service Provider, ISP).</p>
+        </li>
+        <li><span class="text-primary sottolineato">PON</span> (Passive Optical Networks) → usa la fibra ottica (quindi non elettrica); è composta da OLT (Optical Line Terminator, in centrale), ONU (Optical Network Units, le cabine/armadi di strada), ONT (Optical Network Terminals, a casa dell’utente) e ODN (Optical Distribution Network).
+            <div class="row mt-2 mb-3">
+                <div class="col-2"></div>
+                <img class="img-fluid col-8" src="{{url_for('static', filename='PON.jpeg')}}" alt="PON">
+                <div class="col-2"></div>
+            </div>
+            <p>Ci sono 2 tipi di PON, ovvero <span class="sottolineato">GPON</span> (Gigabit PON) e <span class="sottolineato">EPON</span> (Gigabit Ethernet PON, ovvero si differenzia per il framing [organizzazione dei bit in trame] che segue la tradizionale rete ethernet). Entrambe combinano la MULTIPLAZIONE IN LUNGHEZZA D’ONDA (cioè FREQUENZA, ma basata sulle diverse lunghezze d’onda della luce [colori]) con la MULTIPLAZIONE DI TEMPO (se non bastano le lunghezze d’onda).</p>
+        </li>
+        <li><span class="text-primary sottolineato">RETI CELLULARI</span> → offrono servizio voce/dati ad utenti residenziali o in mobilità. La mobilità è dovuta al fatto che la rete cellulare è composta da tantissime “CELLE” (CELLA = singola area coperta dall’ANTENNA, ovvero dove il segnale di questa è predominante sui segnali delle altre antenne); quindi è basata su una coperta capillare (95% del territorio) usando antenne di piccola portata (+ piccola, + veloce il bitrate, + costo per l’operatore perché ne servono di più). Questa rete è basata sul concetto di ROAMING (rintracciabilità dell’utente sul territorio) e HANDOVER (continuità della connessione nel passaggio da una cella all’altra).La struttura della rete cellulare è basata su una rete di accesso di tipo RADIO (con le antenne) e la rete di tipo CORE (operatore).
+            <p class="mb-0">Ci sono state varie <span class="sottolineato">GENERAZIONI</span> della rete cellulare:
+                <ul class="livello2">
+                    <li>1G → solo analogico (voce modula la portante);</li>
+                    <li>2G (GSM) → solo telefonica (+sms), oggi ancora i nostri telefoni hanno un chip GSM per gli sms (+ EDGE ovvero la “E” di quando prende male);</li>
+                    <li>3G → introduce lo scambio di dati (scomparsa);</li>
+                    <li>4G (LTE) → banda larga sui cellulari;</li>
+                    <li>5G (NR) → banda elevata e ritardo bassissimo.</li>
+                </ul>
+            </p>
+        </li>
+        <li><span class="text-primary sottolineato">RETI SATELLITARI</span> → comunicazione unilaterale (i satelliti inviano a terra, ma noi non inviamo nulla ai satelliti); ci sono 3 tipologie di orbite:
+            <ul class="livello2">
+                <li>GEO = per trasmissioni broadcast e servizi dati;</li>
+                <li>MEO = per GPS;</li>
+                <li>LEO = per telefonia satellitare e servizi dati a bassa latenza.</li>
+            </ul>
+        </li>
+    </ul>
+    <p>La <strong class="text-primary">RETE DI TRASPORTO</strong> crea l’interconnessione tra reti di accesso; i suoi nodi sono commutatori telefonici e dati (router, strato 3) in una topologia gerarchica a maglia e i suoi canali sono in fibra ottica. È gestita da più operatori telefonici o dati in competizione. La trasmissione è interamente digitale, si è evoluta dalla rete telefonica tradizionale e si è strutturata con la <span class="text-primary">MULTIPLAZIONE DI TEMPO GERARCHICO</span> (meno cavi a bitrate elevatissimi per più comunicazioni divise in tempo); gerarchica perchè è come una “matrioska”, ovvero ho più cavi che vengono di volta in volta raggruppati in singoli canali (per poi essere nuovamente riscomposti in uscita).La rete di trasporto di oggi è basata su gerarchie sincrone (SONET, SDH  e STS).</p>
+</div>
+{% endblock %}

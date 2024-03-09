@@ -1,0 +1,56 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p>I <strong class="text-primary">PROTOCOLLI A FINESTRA</strong> compaiono praticamente in tutte le reti; il loro scopo è recupero di errori di trasmissione, controllo del flusso di trasmissione e controllo della sequenza (infatti la trasmissione di bit su un canale non è mai esente da errori, perciò questi vanno rilevati e corretti [o recuperati]) [esempi di protezione sono i bit di parità e i codici di ripetizione]. Questi bit di parità vengono inseriti nell’intestazione del pacchetto (PCI).</p>
+    <p>⚠️Se i bit di parità di un pacchetto sono errati, il pacchetto viene scartato (come se non fosse mai esistito)!</p>
+    <p>A seconda della quantità di bit di parità ci sono tecniche diverse: noi useremo <span class="sottolineato">pochi bit</span> per cercare di rilevare gli errori in ricezione e permettere la <span class="sottolineato">ritrasmissione</span> della PDU, ovvero la tecnica <span class="text-primary">ARQ</span> [Automatic Repeat reQuest], dove abbiamo nella PCI sia i bit di parità sia bit di numerazione sia gli indirizzi. Nelle immagini sotto vediamo che ci sono 2 PCI (intestazioni): quella del pacchetto dati [che il trasmettitore manda al ricevitore] e quella del pacchetto di riscontro (ACK o acknowledge) [che viene rimandata dal ricevitore al trasmettitore].</p>
+    <div class="row">
+        <div class="col-3"></div>
+        <img class="img-fluid col-6" src="{{url_for('static', filename='protocolli_finestra_1.png')}}" alt="protocolli_finestra_1">
+        <div class="col-3"></div>
+    </div>
+    <p class="mt-3 mb-1">Definiamo quindi:</p>
+    <ul>
+        <li><span class="text-primary">FINESTRA DI TRASMISSIONE</span> (WT) = quantità massima di PDU in sequenza che il trasmettitore è autorizzato ad inviare in rete senza averne ricevuto riscontro (ACK). Può anche essere vista come numero max di PDU inviate da uno stesso trasmettitore contemporaneamente presenti sul canale o in rete (dimensione limitata dalla quantità di memoria allocata in trasmissione);</li>
+        <li><span class="text-primary">FINESTRA DI RICEZIONE</span> (WR) = sequenza di PDU che il ricevitore è disposto ad accettare e memorizzare (dimensione limitata dalla quantità di memoria allocata in ricezione).</li>
+    </ul>
+    <p>Ci sono 3 tecniche ARQ:</p>
+    <ol>
+        <li><strong class="text-primary">STOP AND WAIT</strong> (WT=1,WR=1) → il TRASMETTITORE fa una copia del PDU (nel caso di ritrasmissione), invia la PDU, attiva un timeout (orologio) ponendosi in attesa della conferma di ricezione (ACK) e se scade il timeout prima dell’arrivo dell’ACK, ripete la trasmissione riattivando il timeout. Una volta ricevuto l’ACK, il trasmettitore controlla la correttezza dell’ACK, controlla il numero di sequenza e, se l’ACK è relativo all’ultima PDU trasmessa, ferma il timeout e manda la prossima PDU (altrimenti l’ACK è scartato). Il RICEVITORE controlla la correttezza della PDU e, se corretta, controlla il numero di sequenza e invia l’ACK; se la PDU è quella attesa, la sua SDU viene inviata ai livelli superiori.
+        <p>⚠️Se invece usassi lo STOP AND WAIT con <span class="text-primary">ALTERNATING BIT PROTOCOL</span>, avrei che i contatori non vengono incrementati ad ogni ciclo, ma lo 0 diventa 1 e al ciclo dopo l’1 diventa 0 (binario).</p>
+        <p>⚠️Se abbiamo dei <span class="text-primary">CANALI NON SEQUENZIALI</span> non possiamo verificare malfunzionamenti (dunque possono verificarsi perdita di PDU o duplicazioni di PDU); spesso, se l’ACK è troppo lento, potremmo avere i contatori V(T) e V(R) disallineati. Si potrebbe usare una numerazione modulo 4 (ovvero numeri da 0 a 3), ma anche qui il protocollo si blocca quando i due contatori sono disallineati (servono meccanismi per ripartire). Non c’è una soluzione al canale non sequenziale, ma si può ridurre la possibilità di malfunzionamento usando più bit per la numerazione o fissare un tempo di vita massimo per le PDU e gli ACK (TTL = contatore di quanti link sono attraversati dal pacchetto [quando è a zero, il pacchetto viene ammazzato]).
+        Lo STOP AND WAIT è <span class="sottolineato">poco efficiente</span> perché bisogna aspettare sempre l’ACK.</p>
+        </li>
+        <li><strong class="text-primary">GO BACK N</strong> (WT>1,WR=1)→ il TRASMETTITORE con finestra N(>1) invia fino a N(= W_T) PDU, facendo di ognuna una copia, attiva 1 solo timeout per le N PDU (resettato ad ogni trasmissione di PDU), attende gli ACK; per ogni ACK non duplicato ricevuto, fa scorrere in avanti la finestra di tanti pacchetti quanti sono i pacchetti confermati. Se scade il timeout prima della conferma di ricezione della PDU che ha settato il timeout, si ripete la trasmissione di tutte le PDU non ancora confermate. Il RICEVITORE invece si comporta come quello della STOP AND WAIT (controlla la correttezza della PDU e se corretta, controlla il numero di sequenza e invia l’ACK; se la PDU contiene il 1° numero di sequenza non ancora ricevuto, la sua SDU viene inviata ai livelli superiori) [1 CICLO = tempo intercorso tra l’invio della 1^ PDU e la ricezione dell’ultimo ACK].
+            <div class="row">
+                <div class="col-4">
+                    <mark>Quando si perde una PDU?</mark>
+                    <img class="img-fluid" src="{{url_for('static', filename='go_back_n_1.png')}}" alt="go_back_n_1">
+                </div>
+                <div class="col-4"></div>
+                <div class="col-4">
+                    <mark>Quando si perdono gli ACK?</mark>
+                    <img class="img-fluid go_back_n_2" src="{{url_for('static', filename='go_back_n_2.png')}}" alt="go_back_n_2">
+                </div>
+            </div>
+        <p>⚠️Nel caso di flussi di informazione bidirezionali, si può scrivere l’ACK nell’intestazione di PDU che viaggiano in direzione opposta (permette risparmio di ACK) [<span class="text-primary">PIGGYBACKING</span>]. Inoltre, WT e WR devono trovarsi solo in posizione tale che la finestra del ricevitore sia uguale a quella del trasmettitore +1 posto (specialmente WR deve essere incluso in WT).</p>
+        <p>⚠️Idealmente i numeri delle PDU devono essere tutti diversi ma in realtà la numerazione è <span class="text-primary">CICLICA</span> (perché ho k bit per scrivere il numero, quindi WT&lt;2^k e analogamente <mark><strong>WT+WR≤2^k</strong></mark>).</p>
+        </li>
+        <li><strong class="text-primary">SELECTIVE REPEAT</strong> (WT>1,WR>1 [di solito uguali]) → qui il RICEVITORE tiene in memoria le PDU, ovvero può accettare PDU corrette ma fuori sequenza (più prestazioni). Noi vediamo il caso con ACK cumulativi e timeout associati alla finestra. Quindi il ricevitore invia gli ACK per segnalare le PDU fuori sequenza di cui ha bisogno.
+        <p>Quindi il TRASMETTITORE invia fino a N=W_T PDU, facendo di ognuna una copia e attiva un solo timeout (orologio) per le N PDU (resettato ad ogni trasmissione di PDU). Si pone poi in attesa degli ACK e per ogni ACK non duplicato ricevuto, fa scorrere in avanti la finestra di tante PDU quante sono quelle confermate (fino a qui come Go Back N); se invece scade il timeout, ripete la trasmissione di tutte le PDU non ancora confermate.</p>
+        <p>Il RICEVITORE riceve 1 PDU, controlla la correttezza, controlla il numero di sequenza e se è tutto ok, consegna la sua SDU al livello superiore (eventualmente insieme ad altre SDU ricevute). Se la PDU invece è corretta ma non in sequenza, se è entro la finestra di ricezione la memorizza, altrimenti la scarta. Invia comunque un ACK relativo all’ultima PDU ricevuta in sequenza.</p>
+        <p>⚠️Ricorda che RTT = tempo di invio pacchetto e ritorno dell’ACK relativo, mentre TTX = tempo di trasmissione (ritardo di trasmissione).
+        La scrittura <mark><strong>TTX⋅WT≫RTT</strong></mark> dice che l’ACK della PDU mi torna indietro molto prima che la finestra sia stata completamente trasmessa (condizione per avere più PDU mandate e ACK ritornati nella stessa finestra).</p>
+        <div class="row mb-3">
+            <div class="col-3"></div>
+            <img class="img-fluid col-6" src="{{url_for('static', filename='selective_repeat.png')}}" alt="selective_repeat">
+            <div class="col-3"></div>
+        </div>
+        <p>Nell’<span class="sottolineato">esempio</span> vediamo che si perde PDU2; dunque PDU3 viene memorizzato nella finestra del ricevitore (WR) e viene inviato ACK2 fino a che non viene inviata la PDU2 (infatti vengono salvati dal ricevitore anche PDU4 e PDU5 nel mentre). Quando arriva PDU2, viene svuotata la WR e inviata al livello superiore; viene inviato ACK6 perché quelli prima li ho già inviati.</p>
+        <p>⚠️In caso di perdita singola, il Selective Repeat si comporta come il Go Back N; come abbiamo già accennato prima, si hanno vantaggi rispetto al Go Back N se RTT&lt;TTX⋅WT (tempo trasmissione della finestra). Modificando il comportamento del trasmettitore (vincolandolo a ritrasmettere solo il 1° pacchetto perso nella finestra) si riduce l’occupazione del canale (si recupera 1 pacchetto perso ogni RTT). Con gli ACK selettivi si hanno migliori prestazioni. Se invece al ricevitore arriva PDU duplicata, la causa è il timeout del trasmettitore troppo breve!</p>
+        <p>⚠️Anche qui vale la relazione WT+WR≤2^k (che se non rispettata ha come conseguenza pacchetti erroneamente accettati 2 volte e pacchetti erroneamente scartati)!</p>
+        </li>
+    </ol>
+    <p>Dal punto di vista dell'<span class="text-primary">EFFICIENZA</span> dei protocolli a finestra, vediamo che maggiore è il tempo di propagazione, minore è il throughput; maggiore è la finestra di trasmissione, maggiore è il throughput; maggiore è il RTT (Round Trip Time), maggiore è il throughput.</p>
+</div>
+{% endblock %}

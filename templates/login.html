@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Accedi{% endblock %}
+{% block login_active %}active{% endblock %}
+
+{% block content %}
+<div class="row">
+<div class="col-3"></div>
+<div class="col-6 mt-3">
+    <div class="bg-light p-4 border rounded justify-content-center">
+        <form action="/accedi" method="POST">
+            <label for="emailInput" class="form-label">Email</label>
+            <div class="input-group mb-3">
+                <span class="input-group-text">@</span>
+                <input type="email" class="form-control" name="email" id="emailInput" required>
+            </div>
+            <div class="mb-3">
+                <label for="passwordInput" class="form-label">Password</label>
+                <input type="password" class="form-control" name="password" id="passwordInput" required minlength="8" maxlength="20">
+            </div>
+            <div class="text-end">
+                <button type="submit" class="btn bg-black text-white">Accedi</button>
+            </div>
+        </form>
+    </div>
+    <p class="text-center mt-2 text-muted">Non sei ancora registrato? Clicca <a href="{{url_for('signup')}}">qui</a> per registrarti!</p>
+</div>
+<div class="col-3"></div>
+</div>
+{% endblock %}

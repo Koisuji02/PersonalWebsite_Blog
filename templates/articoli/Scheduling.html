@@ -1,0 +1,68 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p class="mb-1">Ogni CPU viene assegnata a più processi/thread; lo <strong class="text-warning">SCHEDULER</strong> deve decidere l’algoritmo da usare per assegnare la CPU ad un processo/thread. Avevamo già parlato di quando un processo/thread venga interrotto (CONTEXT SWITCHING). Ci sono diversi tipi di scheduler:</p>
+    <ul class="livello3">
+        <li><strong>SHORT-TERM</strong> (“breve termine”) → seleziona il processo a cui assegnare la CPU (interviene molto spesso);</li>
+        <li><strong>MEDIUM-TERM</strong> (“medio termine”) → controlla il numero di processi in RAM (interviene spesso);</li>
+        <li><strong>LONG-TERM</strong> (“lungo termine”) → controlla il grado di multiprogrammazione (interviene meno).</li>
+    </ul>
+    <p class="mb-1">Lo scheduler gestisce i processi in attesa mediante la “<span class="text-warning">CODA DI PROCESSI</span>” (lista concatenata); il diagramma di accodamento specifica le gestione dei processi nelle varie code. Ci sono diversi ALGORITMI (con e senza prelazione [ovvero bloccare un processo e sottrarne la CPU]). Le prestazioni dello scheduler sono valutate usando una “funzione di costo”, stimata in base a:</p>
+    <ul class="livello3">
+        <li>Percentuale di utilizzo della CPU;</li>
+        <li>Throughput = n° processi completati nell'unità di tempo;</li>
+        <li>Tempo di completamento ("turnaround") = dalla sottomissione al completamento della task;</li>
+        <li>Tempo di attesa = tempo passato nella coda di task ready;</li>
+        <li>Tempo di risposta = dalla sottomissione alla prima risposta.</li>
+    </ul>
+    <p class="mb-2">Vediamo quindi gli <strong class="text-warning sottolineato">ALGORITMI DELLO SCHEDULING</strong> mediante il Diagramma di Gantt:</p>
+    <ul>
+        <li><strong class="text-warning">FCFS</strong> (First-Come First-Served) = CPU assegnata ai task seguendo l’ordine in cui viene richiesta (FIFO).
+            <p class="mb-0"><span class="pro">Pro</span>: facile</p>
+            <p class="mb-1"><span class="contro">Contro</span>: tempi di attesa lunghi, no prelazione (non utile) e effetto convoglio (task lunghi che bloccano corti)</p>
+            <div class="row mb-3">
+                <div class="col-lg-1"></div>
+                <img class="img-fluid col-12 col-lg-10" src="{{url_for('static', filename='FCFS.png')}}" alt="FCFS">
+                <div class="col-lg-1"></div>
+            </div>
+        </li>
+        <li><strong class="text-warning">SJF</strong> (Shortest-Job First) = ad ogni processo viene associato la durata della sua prossima richiesta (“next CPU burst”) e quindi lo scheduling è effettuato in ordine della durata della prossima richiesta di processi/thread.
+            <p class="mb-0"><span class="pro">Pro</span>: ottimo</p>
+            <p class="mb-1"><span class="contro">Contro</span>: starvation (attesa indefinita) e difficoltà di applicazione a causa di non conoscere a priori il futuro, no prelazione (non utile)</p>
+            <div class="row mb-3">
+                <div class="col-lg-1"></div>
+                <img class="img-fluid col-12 col-lg-10" src="{{url_for('static', filename='SJF.png')}}" alt="SJF">
+                <div class="col-lg-1"></div>
+            </div>
+        </li>
+        <li><strong class="text-warning">PS</strong> (Priority Scheduling) = ad ogni processo viene associata la sua priorità (a priorità maggiore corrisponde valore minore) e la CPU viene data al processo con la priorità maggiore (quindi come SJF ma con la priorità e non il burst time)
+            <p class="mb-1"><span class="contro">Contro</span>: starvation (attesa indefinita), no prelazione (non utile)</p>
+            <div class="row mb-3">
+                <div class="col-lg-1"></div>
+                <img class="img-fluid col-12 col-lg-10" src="{{url_for('static', filename='PS.png')}}" alt="PS">
+                <div class="col-lg-1"></div>
+            </div>
+        </li>
+        <li><strong class="text-warning">RR</strong> (Round Robin) = FCFS con prelazione; l’utilizzo della CPU viene suddiviso in “time quantum” e ogni processo/thread tiene la CPU per 1 time quantum e viene poi reinserito nella coda di processi ready (gestita con modalità FIFO).
+            <p class="mb-0"><span class="pro">Pro</span>: prelazione</p>
+            <p class="mb-1"><span class="contro">Contro</span>: tempo di attesa medio lungo, prestazioni legate a quanto è lungo il time quantum (lungo → RR ≈ FCFS; corto → effettuati troppi context switching, quindi tempo di gestione molto elevato [overhead alto])</p>
+            <div class="row mb-3">
+                <div class="col-lg-1"></div>
+                <img class="img-fluid col-12 col-lg-10" src="{{url_for('static', filename='RR.png')}}" alt="RR">
+                <div class="col-lg-1"></div>
+            </div>
+        </li>
+        <li><strong class="text-warning">SRTF</strong> (Shortest-Remaining-Time First) = SJF con prelazione; se viene aggiunto un processo con burst time minore di quello in esecuzione, avviene prelazione.
+            <p class="mb-0"><span class="pro">Pro</span>: task corti gestiti molto velocemente, context switching solo se arrivano nuovi processi con burst time minore (quindi overhead minimo)</p>
+            <p class="mb-1"><span class="contro">Contro</span>: starvation (attesa indefinita) e richiede stime accurate sul burst time dei processi/thread</p>
+            <div class="row mb-3">
+                <div class="col-lg-1"></div>
+                <img class="img-fluid col-12 col-lg-10" src="{{url_for('static', filename='SRTF.png')}}" alt="SRTF">
+                <div class="col-lg-1"></div>
+            </div>
+        </li>
+    </ul>
+    <p class="mb-2">⚠️Se ho più task raggruppabili in gruppi diversi, si possono applicare più algoritmi di scheduling (MQS, Multilevel Queue Scheduling).</p>
+    <p>⚠️Lo SCHEDULING è un task che viene schedulato analogamente agli altri task; lo scheduling può essere fatto tramite processi o tramite thread (a seconda dell’OS). Inoltre finora abbiamo visto lo scheduling MONO-PROCESSORE, ma nella realtà abbiamo sistemi multicore: bisogna fare un BILANCIAMENTO del carico (ovvero delle task assegnate ai vari core).</p>
+</div>
+{% endblock %}

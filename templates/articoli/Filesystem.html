@@ -1,0 +1,66 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p class="mb-2">I <strong class="text-warning">file</strong> memorizzano informazioni a lungo termine (anche quando viene spenta la macchina); sono importanti 3 aspetti, ovvero qual è il sistema di codifica (<strong>CODIFICA</strong>) usato nel file, quali sono i metodi di utilizzo dello spazio (<strong>INDIRIZZAMENTO</strong>) e come vengono memorizzati i file su disco (<strong>ALLOCAZIONE</strong>):</p>
+    <ol>
+        <li class="mb-4"><strong class="text-warning">CODIFICA</strong> → lo standard era l’ASCII (ma a seconda della regione ne esistono versioni diverse) o meglio dire l’EXTENDED ASCII (8-bit e 255 caratteri). Ma dato che questi caratteri sono pochi, oggi si preferisce l’UNICODE (3 tipi: UTF-8 [8 bit, come ASCII], UTF-16, UTF-32). Un file è una serie di byte scritti uno dopo l’altro, ma ci sono 2 tipi di file:
+            <ul class="mb-1">
+                <li><span class="text-warning">ASCII</span> (o TESTO) [C, Java, …] → sequenze di 0 e 1 che codificano dei caratteri ASCII. Solitamente sono “line-oriented” (qui la più piccola unità è il byte [carattere ASCII]);</li>
+                <li><span class="text-warning">BINARI</span> [eseguibili, word, excel etc…] → sequenze di 0 e 1 non “byte-oriented”, ovvero non necessariamente gli 8 bit corrispondono a caratteri stampabili (qui la più piccola unità è il bit). Rispetto ai file di testo sono più compatti, più facili da modificare e più facile posizionarsi sul file, ma hanno anche portabilità limitata e non sono editabili in editor standard;</li>
+            </ul>
+            <p class="mb-1">⚠️Il kernel <span class="sottolineato">Linux non distingue</span> tra file di testo e binari; inoltre il guadagno effettivo dei file binari è sui numeri (le stringhe vengono trattate allo stesso modo).</p>
+            <p>Per quanto riguarda il processo di traduzione di una struttura (es. in C la struct), quando io la scrivo in memoria senza aggiungere informazioni (ovvero solo la dichiarazione) devo avere un modo di tradurla in un formato memorizzabile, per poi riempirla associandole dei valori; alcuni linguaggi di programmazione (Java, Python, C++, …) supportano questo processo, chiamato <span class="sottolineato">SERIALIZZAZIONE</span> (dove ho dei caratteri aggiuntivi apposta che mi permettono la scrittura della struttura dati su file) [quindi noi scriveremo delle strutture in modo compatto con la write e le leggeremo in modo compatto con la read, facendo a mano delle operazioni simili alla serializzazione, scrivendo in binario].</p>
+            <p class="mb-2">Visto che noi parleremo del POSIX, qui l’<strong class="text-warning">I/O UNIX</strong> si può effettuare interamente con 5 funzioni di libreria [costruite sulle omonime syscall] (ricordando che nel kernel UNIX un “file descriptor” è un intero non negativo [<strong>0 = STDIN</strong>, <strong>1 = STDOUT</strong>, <strong>2 = STDERR</strong>]):</p>
+            <ul class="livello3">
+                <li><strong class="consolas">int open (const char *path, int flags, mode_t mode)</strong> → apre il file del path, ritornando il file descriptor, -1 in caso di errore. Il parametro flags si ottiene con l’OR bit-a-bit di costanti nell’header fcntl.h; la mode specifica i diritti di accesso (i permessi);</li>
+                <li><strong class="consolas">int read (int fd, void *buf, size_t nbytes)</strong> → legge dal file fd un n° di byte uguale a nbytes, memorizzandoli in un buffer (buf). Ritorna il numero di byte letti in caso di successo, -1 in caso di errore e 0 per l’EOF;</li>
+                <li><strong class="consolas">int write (int fd, void *buf, size_t nbytes)</strong> → scrive nbytes byte contenuti in buf nel file descriptor fd. Ritorna il numero di byte scritti in caso di successo, -1 in caso di errore;</li>
+                <li><strong class="consolas">off_t lseek (int fd, off_t offset, int whence)</strong> → ogni file ha associata una posizione corrente del file offset (indica la posizione di partenza della prossima read/write). La lseek assegna un nuovo valore al file offset. Ritorna il nuovo offset in caso di successo, -1 in caso di errore;</li>
+                <li><strong class="consolas">int close (int fd)</strong> → chiude il file descriptor fd (tutti i file sono chiusi automaticamente quando il processo termina). Ritorna 0 in caso di successo, -1 in caso di errore.</li>
+            </ul>
+        </li>
+        <li class="mb-4"><strong class="text-warning">INDIRIZZAMENTO</strong> → i file sono organizzati in directories (direttori), ovvero dei nodi (di un albero) o dei vertici (di un grafo) contenente le informazioni sugli elementi al suo interno. La struttura di un direttorio dipende da ragioni da EFFICIENCY, NAMING e GROUPING; abbiamo:
+            <ul>
+                <li><span class="text-warning sottolineato">Direttori a 1 livello</span> = tutti i file sono contenuti nello stesso direttorio (file evidenziati dalla directory entry [il nome univoco del file] e dai dati [tramite puntatore]). Struttura facile, i file devono avere nomi univoci e la gestione dei file degli utenti è difficile;</li>
+                <li><span class="text-warning sottolineato">Direttori a 2 livelli</span> = i file sono contenuti in un albero a 2 livelli, dove ogni user può avere dunque la sua home directory (tutte le operazioni sono eseguite solo sulla home corretta). Sistema “user-oriented”, nomi ripetibili se di utenti diversi;</li>
+                <li><span class="text-warning sottolineato">Direttori ad albero</span> = generalizza i precedenti (in aggiunta gli utenti possono gestire anche le directory oltre che i file) e introduce i concetti di working directory, path assoluto e relativo etc… (quelli visti finora);</li>
+                <li><span class="text-warning sottolineato">Direttori a grafo aciclico</span> = a differenza dei precedenti, qui viene permessa la condivisione di informazioni (rendendola visibile con path diversi). La presenza di link aumenta la difficoltà di gestione dei filesystem (bisogna distinguere gli oggetti nativi dai loro collegamenti per la loro gestione) [inoltre la creazione di un link a una directory potrebbe causare la nascita di un ciclo nel filesystem, per questo spesso sono vietati];</li>
+                <li><span class="text-warning sottolineato">Direttori a grafo ciclico</span> = permette di creare dei cicli e per questo, i cicli vanno gestiti in tutte le fasi (diversi approcci di gestione tra cui non visitare mai i link).</li>
+            </ul>
+        </li>
+        <li><strong class="text-warning">ALLOCAZIONE</strong> → abbiamo 3 tecniche principali su come vengono memorizzati i file su disco:
+            <ul>
+                <li><span class="text-warning sottolineato">CONTIGUA</span> (contiguous) → ogni file occupa un insieme contiguo di blocchi (direttorio specifica l’indirizzo del 1° blocco e la lunghezza del file).
+                    <ul class="livello2">
+                        <li><span class="pro">PRO:</span> allocazione semplice, permette accessi sequenziali immediati e accessi diretti semplici</li>
+                        <li><span class="contro">CONTRO:</span> occorre decidere l’allocazione, viene sprecato spazio (frammentazione esterna), problemi di allocazione dinamica</li>
+                    </ul>
+                </li>
+                <li><span class="text-warning sottolineato">CONCATENATA</span> (linked) → ogni file può essere allocato gestendo una lista concatenata di blocchi (direttorio contiene un puntatore al 1° e all’ultimo blocco del file, mentre ogni blocco contiene un puntatore al blocco successivo [i blocchi di ciascun file sono sparsi per l’intero disco]).
+                    <ul class="livello2 mb-2">
+                        <li><span class="pro">PRO:</span> risolve i problemi dell’allocazione contigua (permette l’allocazione dinamica ed elimina la frammentazione esterna)</li>
+                        <li><span class="contro">CONTRO:</span> ogni lettura implica un accesso sequenziale ai blocchi (efficiente solo per accessi sequenziali) e c’è memorizzazione dei puntatori (meno spazio utile disponibile)</li>
+                    </ul>
+                    <p class="mb-2">⚠️Un tipo di allocazione concatenata è la <span class="text-warning">FAT</span> (File Allocation Table = tabella con un elemento per ciascun blocco presente sul disco); qui i riferimenti non sono memorizzati nei blocchi su disco, ma direttamente negli elementi della FAT. Il problema è l’affidabilità e la dimensione della FAT.</p>
+                </li>
+                <li><span class="text-warning sottolineato">INDICIZZATA</span> (linked) → ingloba tutti i puntatori in una tabella (tabella di puntatori denominata BLOCCO INDICE (i-node)). Ogni file ha la sua tabella, ovvero un vettore di indirizzi dei blocchi in cui il file è contenuto (direttorio contiene il solo puntatore al blocco indice). Usare blocchi indice piccoli permette di usare meno spazio, mentre usare blocchi indice grandi permette di inserire più riferimenti nel blocco-codice.
+                    <p class="mb-1">Un particolare schema di allocazione indicizzata è lo schema <strong>COMBINATO</strong> (usato in sistemi UNIX/Linux) dove ad ogni file è associato un i-node e ogni i-node contiene diverse informazioni tra cui 15 puntatori ai blocchi dati del file (12 diretti e gli ultimi 3 indiretti). Qui il direttorio è una tabella che associa ad ogni nome di file un i-node number; il link da un direttorio al rispettivo i-node è detto HARD-LINK (lo stesso i-node number può essere individuato da più link). Infatti distinguiamo tra:</p>
+                    <ul class="livello3">
+                        <li><span class="text-warning">HARD-LINK</span> (link fisico) = directory entry che punta ad un i-node (non si possono fare hard-link verso direttori [no cicli] e verso file su altri filesystem). Un file viene rimosso solo quando tutti i suoi hard link sono stati rimossi;</li>
+                        <li><span class="text-warning">SOFT-LINK</span> (link simbolico) = i-node punta ad un blocco che contiene il path-name del file (dunque file che come unico blocco dati ha il nome di un altro file).</li>
+                    </ul>
+                </li>
+            </ul>
+            <p>⚠️Sotto vediamo un esempio di esercizio riguardo all'allocazione:</p>
+            <div class="row">
+                <div class="hide-lg col-2"></div>
+                <img class="img-fluid col-lg-6 col-8" src="{{url_for('static', filename='allocazione1.png')}}" alt="allocazione1">
+                <div class="hide-lg col-2"></div>
+                <div class="hide-lg col-2"></div>
+                <img class="img-fluid col-lg-6 col-8" src="{{url_for('static', filename='allocazione2.png')}}" alt="allocazione2">
+                <div class="hide-lg col-2"></div>
+            </div>
+        </li>
+    </ol>
+</div>
+{% endblock %}

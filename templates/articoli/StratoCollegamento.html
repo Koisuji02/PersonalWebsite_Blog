@@ -1,0 +1,23 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p class="mb-0">Le <span class="text-primary">funzioni principali dello STRATO COLLEGAMENTO</span> sono:</p>
+    <ul class="livello2">
+        <li>Delimitazione della TRAMA (ovvero la PDU dello strato collegamento) [con delimitatori espliciti, indicatori di lunghezza, lunghezza fissa o silenzi tra pacchetti];</li>
+        <li>Multiplazione di protocollo;</li>
+        <li>Indirizzamento locale;</li>
+        <li>Rilevamento (ed eventuale correzione) di errore;</li>
+        <li>Controllo di flusso (con protocolli a finestra);</li>
+        <li>Protocolli accesso multiplo.</li>
+    </ul>
+    <p class="mb-2">I <strong>PROTOCOLLI</strong> dello strato collegamento derivano da un antenato comune, ovvero il protocollo SDLC della IBM; sono usati in reti pubbliche (con collegamenti punto-punto [derivato dal SDLC]) e reti private (con collegamenti broadcast). Ci sono 2 sottostrati nello stato collegamento, ovvero <strong class="text-primary">LLC</strong> (più vicino allo strato3-rete) e <strong class="text-primary">MAC</strong> (più vicino allo strato1-fisico).</p>
+    <p class="mb-1">Le <strong class="text-primary">TRAME</strong> (PDU strato2) sono composte dalla 2-SDU (ovvero il campo dati) e dalla 2-PCI.</p>
+    <p>⚠️Occorre però fare in modo che, se nella SDU c’è un byte 011111110 (ovvero un byte da trasferire uguale al delimitatore [flag] 01111110), questo non venga confuso con il delimitatore. Per farlo ci sono 2 tecniche, ovvero <span class="text-primary">BIT STUFFING</span> e <span class="text-primary">BYTE STUFFING</span> (analoghe ma una usa 1 bit di escape, mentre l’altra usa 1 byte di escape [01111101] per segnalare che il prossimo byte sia uguale ad una sequenze di escape o ad un flag, ma venga gestito come byte da inviare)!</p>
+    <p class="mb-1">I principali protocolli di strato 2 per le <strong class="text-primary">RETI PUBBLICHE</strong> sono:</p>
+    <ul>
+        <li><span class="text-primary sottolineato">PPP</span> (Point to Point Protocol) → usato nella linea telefonica o ADSL, oltre che su connessioni SONET/SDH. Ha come obiettivi: delimitazione delle PDU, byte stuffing, riconoscimento (non correzione) degli errori, multiplazione di più protocolli di strato rete e negoziazione dell’indirizzo di rete (IP) [non correzione errori, controllo di flusso, mantenimento della sequenza, gestione collegamenti multipunto]. È diviso in 3 sottoprotocolli, ovvero INCAPSULAMENTO, LCP (Link Control Protocol = stabilisce il collegamento PPP e fa l’autenticazione [configurando la tipologia di connessione]) e NCP (Network Control Protocol = dopo l’eventuale autenticazione con successo, definisce le modalità di trasferimento delle PDU e negozia l’assegnazione dell’IP [per ogni protocollo superiore esiste un diverso protocollo NCP]);</li>
+        <li><span class="text-primary sottolineato">ATM</span> (Asynchronous Transfer Mode) → rete a pacchetto con servizio a circuito virtuale su scala geografica con velocità elevate e bassa latenza.</li>
+    </ul>
+    <p>Riguardo allo strato 2 nelle <strong class="text-primary">RETI LOCALI</strong> (rete dove il transito dei dati rimane su dispositivi sotto il mio controllo, e non sotto il controllo dell’operatore) [es. la rete di casa nostra o di un laboratorio], abbiamo l’<span class="text-primary sottolineato">IEEE 802.2 LLC</span> (il numero 802 indica sempre la rete locale [in questo caso 802.2 perché ci riferiamo allo strato 2 della rete locale]) [che come abbiamo detto comunica con lo strato3-rete]. Questo è un protocollo orientato al byte, non usa delimitatori (se ne occupa il MAC), non controlla gli errori (se ne occupa il MAC), le sue PDU non contengono l’indirizzo dei nodi sorgente e destinazione e hanno dimensione variabile; l’unico compito dell’LLC è dare un campo “<span class="sottolineato">Protocol Type</span>”.</p>
+</div>
+{% endblock %}

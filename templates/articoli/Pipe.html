@@ -1,0 +1,62 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p class="mb-1">I <mark>processi concorrenti</mark> possono essere:</p>
+    <ul>
+        <li><span class="text-warning">INDIPENDENTI</span> → non influenzati e non influenzano gli altri processi;</li>
+        <li><span class="text-warning">COOPERANTI</span> → influenzati e influenzano gli altri processi. La cooperazione può avvenire solo con scambio o condivisione di dati (IPC = InterProcess Communication); i modelli di comunicazione sono basati su:
+            <ul class="livello2">
+                <li><strong>MEMORIA CONDIVISA</strong> (normalmente l’OS impedisce ad un processo di accedere alla memoria di un altro processo, ma qui no) [usata per tanti dati];</li>
+                <li><strong>SCAMBIO DI MESSAGGI</strong> = occorre instaurare un canale di comunicazione e richiede l’utilizzo delle system calls [usata per  pochi dati].
+                    <p>Il CANALE DI COMUNICAZIONE viene caratterizzato da naming (denominazione [diretta o indiretta]), sincronizzazione [sincrona o asincrona] e capacità (ovvero la dimensione del buffer per i messaggi in attesa).</p>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    <p class="mb-2">Un esempio di canale di comunicazione sono le <strong class="text-warning">HALF-DUPLEX PIPE</strong>, un canale di comunicazione diretto, asincrono e a capacità limitata. Una PIPE consiste in un <span class="text-warning">flusso di dati tra 2 processi</span>; viene gestita come un file ed è rappresentata tramite 2 descrittori (1 per estremità). Sono HALF-DUPLEX in quanto i dati possono fluire in entrambe le direzioni, ma non insieme (quello accade nelle full-duplex) e possono essere per la comunicazione tra processi con un parente comune. La syscall <strong class="consolas">int pipe (int fileDescr[2])</strong> (definita in &lt;unistd.h>) crea una pipe e ritorna i descrittori delle 2 estremità della pipe nel vettore fileDescr[2] (<mark>l’output effettuato su fileDescr[1] corrisponde all’input ricevuto su fileDescr[0]</mark>). Il processo padre crea una pipe, effettua una fork per generare il figlio (il quale eredita i descrittori del file); quindi 1 dei 2 processi (default il padre) scrive nella pipe, mentre l’altro legge dalla pipe (default il figlio) [il descrittore non usato può essere chiuso, ovvero viene chiusa l’estremità non usata (se leggo chiudo la scrittura e viceversa)].</p>
+    <p class="mb-1">Le pipe <span class="text-warning">vengono manipolate come i file in UNIX</span>, ovvero si usano le funzioni read e write:</p>
+    <ul>
+        <li><strong class="consolas">read</strong> → si blocca se la pipe è vuota (bloccante), ritorna solo i caratteri disponibili (se la pipe contiene meno caratteri di quanto richiesto) e ritorna 0 se la pipe è stata chiusa all’altra estremità;</li>
+        <li><strong class="consolas">write</strong> → si blocca se la pipe è piena (bloccante) e ritorna SIGPIPE se l’altra estremità è stata chiusa [per capire la dimensione di una pipe, si può usare infatti la write fino a che questa non si blocca, proprio perché è bloccante].</li>
+    </ul>
+    <p class="mb-1"><mark>Esercizio - CODICE PER CAPIRE LA DIMENSIONE MASSIMA DELLA PIPE:</mark></p>
+    <pre><strong class="consolas">
+#define SIZE 524288
+int fileDescr[2]; 
+int main() {
+    int i, n, nR, nW;
+    char c = '1';
+    setbuf(stdout, 0);
+
+    pipe(fileDescr); // creo la pipe
+    n = 0;
+    if (fork()) {
+        fprintf(stdout, "\nFather PID=%d\n", getpid());
+        sleep(1);
+        for (i = 0; i < SIZE; i++) {
+            nW = write(fileDescr[1], &c, 1);
+            n += nW;
+            fprintf(stdout, "W %d\r", n);
+        }
+    } else {
+        fprintf(stdout, "\Child PID=%d\n", getpid());
+        sleep(10);
+        for (i = 0; i < SIZE; i++) {
+            nR = read(fileDescr[0], &c, 1);
+            n += nR;
+            fprintf(stdout, "R %d\r", n);
+        }
+    }
+}
+    </strong></pre>
+    <p class="mb-4">⚠️<mark>Cosa succede se non si rispetta la gestione half-duplex di una pipe?</mark> Si possono invertire le operazioni di read e write se lo si fa correttamente; per quanto riguarda la caratteristica full-duplex, questo non accade con le half-duplex pipe (al massimo possono alternarsi molto velocemente tra chi scrive e chi legge, ma mai contemporaneamente)!</p>
+    <p class="mb-1"><strong class="text-warning">→ PIPE E REDIREZIONE IN UNIX/LINUX</strong>: la comunicazione tra processi può essere fatta con le pipe anche quando i processi vengono eseguiti con i<strong> comandi di shell</strong>; le pipe a livello di comandi shell sono rappresentate con il carattere “<strong class="consolas">|</strong>”. La pipe crea un collegamento tra lo stdout del comando precedente e lo stdin del comando successivo (la pipe risiede completamente in memoria).</p>
+    <p class="mb-1">Altra cosa da vedere in UNIX/Linux è la <span class="text-warning">REDIREZIONE dell’I/O</span>, ovvero permettere ad un comando di leggere e scrivere i dati su terminali diversi da quelli predefiniti (default: stdin = 0, stdout = 1, stderr = 2). Lo si fa con:</p>
+    <ul class="mb-2">
+        <li><strong class="consolas">comando &lt; file</strong> (redirezione dello stdin da un file), oppure, se voglio la redirezione del stdin da tastiera uso comando &lt;&lt; marker …testo… marker;</li>
+        <li><strong class="consolas">comando > file</strong> (redirezione dello stdout su un file), dove se il file esiste viene cancellato e poi ricreato per essere usato nello stdout, oppure, se non voglio cancellare il file, posso usare comando >> file (l’output viene accodato sul file);</li>
+        <li><strong class="consolas">comando 2> file</strong> (redirezione dello stderr su un file) e analogamente a sopra comando 2>> file.</li>
+    </ul>
+    <p>⚠️Si può fare anche redirezione contemporanea dello stdout e dello stderr sullo stesso file (con <strong class="consolas">comando &> file</strong> oppure comando &>> file) o su file diversi (comando > fileOut 2> fileErr)!</p>
+</div>
+{% endblock %}

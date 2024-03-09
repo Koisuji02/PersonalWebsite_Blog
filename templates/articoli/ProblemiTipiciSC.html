@@ -1,0 +1,134 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p class="mb-2">Vediamo ora i <strong class="text-warning">PROBLEMI DI SINCRONIZZAZIONE TIPICI</strong>:</p>
+    <ul>
+        <li><span class="text-warning">PRODUTTORI-CONSUMATORI</span>(molteplici):
+            <pre><strong class="consolas">
+init(full,0); init(empty,SIZE);
+init(MEp,1); init(MEc,1);
+
+//PRODUTTORE
+while(1) {
+    PRODUCE
+    wait(empty);
+    wait(MEp);
+    ENQUEUE
+    signal(MEp);
+    signal(full);
+}
+
+//CONSUMATORE
+while(1) {
+    wait(full);
+    wait(MEc);
+    DEQUEUE
+    signal(MEc);
+    signal(empty);
+    CONSUME
+}
+            </strong></pre>
+        </li>
+        <li><span class="text-warning">READERS-WRITERS</span>:
+            <ul class="livello2 mt-2">
+                <li><span class="text-warning">PRECEDENZA AI READER</span>:
+                    <pre><strong class="consolas">
+nR=0;
+init(MEr,1);init(MEw,1);
+init(w,1);
+
+//Reader
+wait(MEr);
+nR++;
+if(nR == 1) wait(w);
+signal(MEr);
+LETTURA
+wait(MEr);
+nR--;
+if(nR == 0) signal(w);
+signal(MEr);
+
+//Writer
+wait(MEw);
+wait(w);
+SCRITTURA
+signal(w);
+signal(MEw);
+                    </strong></pre>
+                </li>
+                <li><span class="text-warning">PRECEDENZA AI WRITER</span>:
+                    <pre><strong class="consolas">
+nR=nW=0;
+init(MEr,1);init(MEw,1);
+init(w,1);init(r,1);
+
+//Reader
+wait(r);
+wait(MEr);
+nR++;
+if(nR == 1) wait(w);
+signal(MEr);
+signal(r);
+LETTURA
+wait(MEr);
+nR--;
+if(nR == 0) signal(w);
+signal(MEr);
+
+//Writer
+wait(MEw);
+nW++;
+if(nW == 1) wait(r);
+signal(MEw);
+wait(w);
+SCRITTURA
+signal(w);
+wait(MEw);
+nW--;
+if(nW == 0) signal(r);
+signal(MEw);
+                    </strong></pre>
+                </li>
+            </ul>
+        </li>
+        <li class="mb-3">⚠️Il <span class="text-warning">TUNNEL A SENSO ALTERNATO</span> è come precedenza ai reader, ma entrambi i sensi (sx e dx) hanno codice analogo ai reader!</li>
+        <li><span class="text-warning">5 FILOSOFI</span>:
+            <pre><strong class="consolas">
+state[N];
+init(mutex,1);
+init(sem[0],0);init(sem[1],0);init(sem[2],0);init(sem[3],0);init(sem[4],0);
+
+while(1) {
+    think();
+    takeForks(i);
+    eat();
+    putForks(i);
+}
+
+takeForks(int i) {
+    wait(mutex);
+    state[i] = HUNGRY;
+    test(i);
+    signal(mutex);
+    wait(sem[i]);
+}
+
+test(int i) {
+    if (state[i]==HUNGRY && state[LEFT]!=EATING && state[RIGHT]!=EATING) {
+        state[i] = EATING;
+        signal(sem[i]);
+    }
+}
+
+putForks(int i) {
+    wait(mutex);
+    state[i] = THINKING;
+    test(LEFT);
+    test(RIGHT);
+    signal(mutex);
+}
+            </strong></pre>
+        </li>
+    </ul>
+</div>
+{% endblock %}

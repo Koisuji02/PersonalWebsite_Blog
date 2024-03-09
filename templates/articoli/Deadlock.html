@@ -1,0 +1,45 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p>Come abbiamo già visto lo <strong>STALLO</strong> (<strong class="text-warning">DEADLOCK</strong>) avviene quando un processo/thread (task) chiede una risorsa non disponibile, che ne comporta uno stato di attesa infinito (DEADLOCK implica STARVATION, non viceversa). Le <span class="text-warning">CONDIZIONI</span> affinchè si verifichi il deadlock sono <strong>Mutua Esclusione</strong>, <strong>Possesso&Attesa</strong>, <strong>Impossibilità di Prelazione</strong> e <strong>Attesa Circolare</strong> (devono verificarsi tutte insieme).</p>
+    <p>Per analizzare il deadlock si usa un il <strong class="text-warning">GRAFO DI ALLOCAZIONE DELLE RISORSE</strong> <strong>G=(V,E)</strong>; i VERTICI V sono divisi in PROCESSI P={P1,…,Pn } e RISORSE R={R1,…,Rm } [tutti i processi e tutte le risorse sono identici, non c’è distinzione all’interno di processi e risorse]. Gli ARCHI E sono divisi in RICHIESTE Pi→Rj e ASSEGNAZIONI Ri→Pj. In alcuni casi si può semplificare il grafo di allocazione in un GRAFO DI ATTESA (eliminando i vertici R e ricomponendo gli archi). In alcuni casi invece è utile estendere il grafo di allocazione in un GRAFO DI RIVENDICAZIONE, ovvero si aggiungono delle risorse usate negli archi di reclamo (rivendicazione).</p>
+    <p class="mb-2">I deadlock possono essere <mark>GESTITI</mark> in vari modi:</p>
+    <ul>
+        <li class="mb-2"><strong class="text-warning">A POSTERIORI</strong>: si permette al sistema di entrare in stallo per poi intervenire; si hanno 2 fasi:
+            <ul class="livello2">
+                <li><span class="text-warning">RILEVAZIONE</span> (deadlock detection) = se il grafo ha cicli troviamo stalli se esiste 1 sola istanza per ogni risorsa, mentre non ci sono stalli se il grafo è aciclico oppure se esiste più di 1 istanza per ogni risorsa. Ogni fase di rilevazione ha un costo; le rilevazioni vengono effettuate ogni volta che un processo fa una richiesta non soddisfatta subito oppure ad intervalli di tempo fissi oppure quando l’uso della CPU scende sotto una certa soglia.</li>
+                <li><span class="text-warning">RIPRISTINO</span> (recovery del sistema) = ci sono 2 modi:
+                    <ul class="livello3">
+                        <li>Agire sui <span class="sottolineato">VERTICI</span> del grafo di assegnazione = terminare tutti i processi in stallo oppure terminare 1 processo alla volta tra quelli in stallo;</li>
+                        <li>Agire sugli <span class="sottolineato">ARCHI</span> del grafo di assegnazione = rimuovere le richieste verso risorse non concesse oppure prelazionare le risorse ad 1 processo alla volta.</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li class="mb-2"><strong class="text-warning">PREVENZIONE</strong> = cercano di prevenire il verificarsi di 1 delle 4 CONDIZIONI dello stallo; di particolare interesse (vita reale) è la prevenzione dell’Attesa Circolare (che avviene quando in un insieme di processi, ogni processo attende una risorsa posseduta da un altro processo), fatta imponendo un ordinamento totale tra le classi di risorse;</li>
+        <li><strong class="text-warning">EVITARE</strong> = forzare i processi a fornire a priori informazioni sulle richieste che effettueranno nel corso della loro esistenza; gli algoritmi si differenziano per la quantità e il tipo di informazioni richieste, e si basano sul concetto di:
+            <ul class="livello2">
+                <li><strong>STATO SICURO</strong> = il sistema può allocare le risorse richieste da tutti i processi in esecuzione, impedire il verificarsi di uno stallo e trovare una sequenza sicura;</li>
+                <li><strong>SEQUENZA SICURA</strong> = sequenza di schedulazione dei processi tale che, per ogni processo, le richieste che esso può ancora fare siano soddisfatte impiegando le risorse attualmente disponibili più le risorse liberate dai processi precedenti.</li>
+            </ul>
+            <p class="mb-2">Il sistema parte in uno stato sicuro; la richiesta di una nuova risorsa sarà soddisfatta solo se lascerà il sistema in uno stato sicuro, altrimenti verrà ritardata (e il processo messo in attesa) [ricorda che stato non sicuro ≠ stallo, ma semplicemente in uno stato non sicuro può avvenire uno stallo]. Abbiamo 2 algoritmi:</p>
+            <ul class="livello3">
+                <li><span class="text-warning sottolineato">ALGORITMO PER ISTANZE UNITARIE</span> = tutte le richieste che saranno effettuate devono essere dichiarate all’inizio dell’esecuzione; quando viene fatta una richiesta, si trasforma il suo arco di reclamo in un arco di assegnazione (se non si generano cicli); quando viene rilasciata una risorsa, il suo arco di assegnazione torna ad essere arco di reclamo;</li>
+                <li><span class="text-warning sottolineato">ALGORITMO PER ISTANZE MULTIPLE</span> (Dijkstra o “del banchiere”). <mark>Vediamo degli esempi</mark>:
+                    <div class="row mb-3 mt-2">
+                        <div class="col-lg-1"></div>
+                        <img class="img-fluid col-12 col-lg-10" src="{{url_for('static', filename='DEADLOCK1.png')}}" alt="DEADLOCK1">
+                        <div class="col-lg-1"></div>
+                    </div>
+                    <p class="mb-1"><mark>Rispetto a prima, la richiesta P1(1,0,2) può essere soddisfatta?</mark> Disponibili: 3,3,2 - 1,0,2 = 2,3,0; Assegnate: 2,0,0 + 1,0,2 = 3,0,2; Necessità: 1,2,2 - 1,0,2 = 0,2,0; da cui applico nuovamente l'algoritmo:</p>
+                    <div class="row mb-3 mt-2">
+                        <div class="col-lg-1"></div>
+                        <img class="img-fluid col-12 col-lg-10" src="{{url_for('static', filename='DEADLOCK2.png')}}" alt="DEADLOCK2">
+                        <div class="col-lg-1"></div>
+                    </div>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
+{% endblock %}

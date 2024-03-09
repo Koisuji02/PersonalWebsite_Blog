@@ -1,0 +1,199 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p class="mb-1">Per quanto riguarda i <strong class="text-warning">COMANDI</strong>, questi sono tutti documentati (man comando oppure comando --help) e hanno struttura <strong class="consolas">comando [opzioni] [argomenti]</strong>, dove:</p>
+    <ul>
+        <li><strong>OPZIONI</strong> → specificano azioni/effetti particolari (opzionali) e hanno 2 formati:
+            <ul class="livello2">
+                <li>specificate da un solo carattere con -carattere [es. -d];</li>
+                <li>specificate da una stringa con --stringa [es. --ld].</li>
+            </ul>
+        </li>
+        <li><strong>ARGOMENTI</strong> → specificano i target su cui il comando deve agire (opzionali).</li>
+    </ul>
+    <p>⚠️I comandi lunghi possono essere continuati sulla riga successiva mettendo come ultimo carattere della riga corrente un “\”. Inoltre si possono fornire più comandi sulla stessa riga separandoli con “;”.</p>
+    <p class="mb-2">Ora vediamo una serie di <mark>COMANDI UTILI</mark>:</p>
+    <ul>
+        <li class="mb-4"><strong class="consolas">ls [opzioni] [file…]</strong> → elenca il contenuto di una cartella. Se il nome del file inizia con il carattere “.” significa che il file è nascosto; invece file obsoleti sono spesso rinominati automaticamente appendendo al nome il carattere “~”.</li>
+        <li><strong class="consolas">chmod [opzioni] permessi file</strong> → cambiare i permessi di file/directory. I nuovi permessi possono essere scritti con 3 cifre ottali (es. chmod 775 file) oppure in modo simbolico con una stringa di caratteri indicando verso chi è rivolto il permesso (u = user, g = group, o = other, a = all), in cosa consiste (r, w, x) e eventuali combinazioni tra questi 2 campi (+ = aggiungo, - = tolgo, =). I <strong class="text-warning">PERMESSI</strong> sono composti da 1 carattere iniziale che ci indica il tipo di oggetto (- = normal file, d = directory, s = socket file, l = link file) e da 3 terne che in ordine si riferiscono a u = user (owner), g = group, o = others. Ognuna di queste terne è composta da 3 caratteri che ci dicono i permessi dati agli utenti sopra citati (r = read, w = write, x = execute). Esistono comandi per cambiare le proprie generalità e gestire i permessi: <strong class="consolas">su username</strong> (per diventare un utente diverso), <strong class="consolas">sudo comando</strong> (per eseguire comandi come superuser), <strong class="consolas">sudo -u user comando</strong> (per eseguire comando nelle vesti di un altro utente) e <strong class="consolas">whoami</strong> (per conoscere il proprio username). Questi comandi hanno come opzione possibile -r, -R (ovvero "recursive", cioè operare anche nei sottodirettori);</li>
+        <li><strong class="consolas">chown [opzioni] utente entry</strong> → cambiare il proprietario di una entry;</li>
+        <li class="mb-4"><strong class="consolas">chgrp [opzioni] gruppo entry</strong> → cambiare il gruppo di una entry.</li>
+        <li><strong class="consolas">cp [opzioni] src1 src2 … dest</strong> → copiare 1 o più file dalla posizione corrente (source) alla destinazione;</li>
+        <li><strong class="consolas">rm [opzioni] src1 src2 …</strong> → rimuovere 1 o più file dalla posizione corrente;</li>
+        <li class="mb-4"><strong class="consolas">mv [opzioni] src1 src2 … dest</strong> → muovere 1 o più file dalla posizione corrente alla destinazione.</li>
+        <li><strong class="consolas">cd dest</strong> → cambiare directory corrente;</li>
+        <li><strong class="consolas">mkdir dir</strong> → creare directory;</li>
+        <li><strong class="consolas">rmdir dir</strong> → rimuovere directory (rimosso solo se è vuoto, altrimenti usare rm -rf);</li>
+        <li class="mb-4"><strong class="consolas">pwd</strong> → mostrare il nome della directory corrente.</li>
+        <li><strong class="consolas">cat file1 file2</strong> → concatenare file;</li>
+        <li><strong class="consolas">head [opzioni] file</strong> → visualizzare le n righe iniziali di un file (default n = 10);</li>
+        <li class="mb-4"><strong class="consolas">tail [opzioni] file</strong> → visualizzare le n righe finali di un file (default n = 10).</li>
+        <li><strong class="consolas">pg [opzioni] file</strong> → mostra contenuto file una pagina alla volta;</li>
+        <li><strong class="consolas">more [opzioni] file</strong> → visualizzare il contenuto di 1 o più file;</li>
+        <li class="mb-4"><strong class="consolas">less [opzioni] file</strong> → come more ma con le frecce direzionali per muoversi nel testo già visualizzato.</li>
+        <li><strong class="consolas">diff [opzioni] entry1 entry2</strong> → controlla differenze tra 2 file/direttori;</li>
+        <li><strong class="consolas">wc [opzioni] [file]</strong> → mostra contenuto file una pagina alla volta;</li>
+        <li class="mb-4"><strong class="consolas">ln [opzioni] source [destination]</strong> → crea un link (di default si crea un hard link).</li>
+        <li><strong class="consolas">tar -czvf &lt;file>.tgz &lt;dir></strong> → creazione verbosa di zip su file;</li>
+        <li class="mb-4"><strong class="consolas">tar -xzvf &lt;file>.tgz &lt;dir></strong> → estrazione verbosa di zip su file.</li>
+        <li><strong class="consolas">df [opzioni] disco</strong> → controlla occupazione del disco;</li>
+        <li><strong class="consolas">du [opzioni] direttorio</strong> → spazio occupato da una directory su disco.</li>
+    </ul>
+    <p class="mb-1">Riguardo alla <strong class="text-warning">PROGRAMMAZIONE C</strong> su Linux: il comando <strong class="consolas">gcc &lt;opzioni> &lt;argomenti></strong> è il comando di compilazione e linker generico per il C. Il debug è indicato da -g; con -I si indica la posizione dei file.h (librerie) mentre con -o si indica dovè l’eseguibile. I file.c scritti sotto vengono compilati e linkati insieme. In C abbiamo sempre usato il <strong class="text-warning">MAKEFILE</strong> (CMake) ma non lo abbiamo mai visto nel dettaglio: mediante la verifica delle dipendenze e l’istante dell’ultima modifica, il makefile evita di gestire ripetutamente operazioni ripetitive e inutili. Si procede in 2 fasi: si scrive un file Makefile (file di testo simile ad uno script) e si interpreta questo file con l’utility make (effettuando compilazione e link). Con il comando make --file <nomeFile> possiamo eseguire il Makefile di nome specificato (non quello di default). Per scrivere un Makefile devo rispettare delle regole: le righe bianche e quelle che iniziano con # vengono ignorate (commenti) [inoltre anche qui se riga troppo lunga posso andare a capo con il carattere \]; le righe contengono delle regole e ogni REGOLA è composta dal nome del target (file o azione), dalla lista delle dipendenze da verificare prima di eseguire i comandi relativi alla regola e dal comando (o elenco di comandi) [ogni comando deve essere preceduto dal carattere tab]. Se le dipendenze del target sono più recenti del target stesso, si eseguono le dipendenze prima dei comandi procedendo in maniera ricorsiva. Se il target non è il nome di un file è un “phony” target (ovvero che dovrebbe essere sempre eseguito) [es. il target di nome “target” che abbiamo visto finora]. Vediamo un esempio di scrittura di makefile:</p>
+    <pre><strong class="consolas">
+COMPILER = gcc
+OPTIONS = -Wall -g
+OBJECT = output
+SOURCE = input
+DIRECTORY = bin
+.PHONY = target
+target:
+    $(COMPILER) $(OPTIONS) -o $(OBJECT).o $(SOURCE).c
+install: target
+    mkdir -p ./../$(DIRECTORY)
+    mv $(OBJECT).o ./../$(DIRECTORY)
+clean:
+    rm -rf *.o
+    </strong></pre>
+    <p class="mb-2">Ora parliamo delle <span class="text-warning">ESPRESSIONI REGOLARI</span> (<strong class="text-warning">REGEXP</strong>): sono un modo per specificare un insieme di stringhe complesse. Nelle espressioni regolari troviamo <strong>LETTERALI</strong> (qualsiasi carattere usato nella ricerca del match), <strong>METACARATTERI</strong> (caratteri con significato speciale, es * = da 0 a ∞ simboli precedenti) e <strong>SEQUENZE DI ESCAPE</strong> (metodo per indicare che un metacarattere va usato come letterale, es. \*). Vediamo alcuni di questi metacaratteri:</p>
+    <ul class="livello2">
+        <li><strong class="consolas">[...]</strong> → specifica un elenco o un intervallo di simboli (es. [_a-zA-Z][_a-zA-Z0-9]* specifica il nome di una variabile);</li>
+        <li><strong class="consolas">(…)</strong> → raggruppa insiemi di simboli, gestisce la precedenza tra operatori (classiche tonde) e permette riferimenti ad espressioni precedenti (es. a(b|c) può essere abd o acd);</li>
+        <li><strong class="consolas">|</strong> → or tra 2 espressioni regolari (es. b|c può essere b o c);</li>
+        <li><strong class="consolas">\&lt;</strong> → inizio parola;</li>
+        <li><strong class="consolas">\></strong> → fine parola;</li>
+        <li><strong class="consolas">^</strong> → inizio riga;</li>
+        <li><strong class="consolas">$</strong> → fine riga;</li>
+        <li><strong class="consolas">*</strong> → elemento presente [0,∞] volte;</li>
+        <li><strong class="consolas">+</strong> → elemento presente [1, ∞] volte;</li>
+        <li><strong class="consolas">?</strong> → elemento presente [0,1] volte;</li>
+        <li><strong class="consolas">[abc]</strong> → 1 qualsiasi dei caratteri a, b o c;</li>
+        <li><strong class="consolas">[a-z]</strong> → 1 qualsiasi dei caratteri nel range tra a e z;</li>
+        <li><strong class="consolas">[^a-z]</strong> → 1 qualsiasi dei caratteri non nel range tra a e z;</li>
+        <li><strong class="consolas">{n}</strong> → elemento presente esattamente n volte;</li>
+        <li><strong class="consolas">{n,m}</strong> → elemento presente da n a m volte;</li>
+        <li><strong class="consolas">c</strong> → un qualsiasi simbolo c (tranne quelli speciali);</li>
+        <li><strong class="consolas">.</strong> → un qualsiasi carattere non ‘\n’;</li>
+        <li><strong class="consolas">\s</strong> → spazio o tabulazione;</li>
+        <li><strong class="consolas">\d</strong> → una cifra (0-9);</li>
+        <li><strong class="consolas">\D</strong> → non una cifra;</li>
+        <li><strong class="consolas">\w</strong> → qualsiasi carattere tra 0-9, A-Z, a-z;</li>
+        <li><strong class="consolas">\W</strong> → qualsiasi carattere non tra 0-9, A-Z, a-z;</li>
+        <li><strong class="consolas">[a-zA-Z0-9]</strong> → una lettera o una cifra;</li>
+        <li><strong class="consolas">(.)\1</strong> → 2 caratteri identici (perché \N indica che viene preso il carattere alla posizione N);</li>
+        <li><strong class="consolas">(.) (.) (.)\2\1</strong> → stringa palindroma di 5 caratteri (abcba perché \2 prende il 2° carattere e \1 prende il 1° carattere);</li>
+    </ul>
+    <p class="mb-2">Per quanto riguarda i <strong class="text-warning">FILTRI</strong> (comando che riceve il proprio input da stdin, lo manipola (filtra, secondo determinati parametri e opzioni) e manda l’output su stdout):</p>
+    <ul class="mb-2">
+        <li>find directory [opzioni] [azioni] → ricerca ed elenca file, direttori o link che soddisfano il match (ritorna il path relativo, non solo il nome). Sostanzialmente visita tutto l’albero a partire dal direttorio directory (recursive), trova l’elenco che soddisfa le opzioni e effettua per ogni file le azioni specificate. Le opzioni sono:
+            <ul class="livello2 mb-2">
+                <li>-name pattern → match con solo il nome del file (il path iniziale è rimosso) [-iname pattern è identica ma è case insensitive];</li>
+                <li>-path pattern → come il precedente ma specifica path+nome [-ipath identico ma case insensitive];</li>
+                <li>-regex expr → specifica un’espressione regolare che deve avere un match con il path completo [anche qui iregex expr case insensitive];</li>
+                <li>-regextype expr → specifica il tipo di regex usato e va messo prima di -regex expr;</li>
+                <li>-atime[+,-]n, -ctime[+,-]n, -mtime[+,-]n → ultimo access, status o modification time; n=1 specifica da 0 a 24h fa; inoltre possiamo avere +n (che indica ≤) o -n (che indica ≥);</li>
+                <li>-size [+,-]n[bckwMG] → indica la dimensione del file. Possiamo avere + (che indica ≤) o - (che indica ≥); il carattere dopo il segno indica l’unità di misura (b blocchi di 512 byte, c byte, k kByte, w word (2 byte), M MByte, G GByte);</li>
+                <li>-type tipo → tipo di file (f = file, p = pipe, l = symbolic link, s = socket, d = directory);</li>
+                <li>-user nome, -group nome → appartenente ad un certo user e/o group;</li>
+                <li>-readable, -writable, -executable → leggibile, scrivibile, eseguibile;</li>
+                <li>-mindepth n, -maxdepth n, -quit → sezione dell’albero in cui effettuare la ricerca (mindepth = profondità minima per la ricerca nell’albero e maxdepth = profondità massima); con -quit si smette la ricerca dopo il primo match.</li>
+            </ul>
+            <p class="mb-1">Le azioni invece sono:</p>
+            <ul class="livello2">
+                <li>-print → azione di default, stampa un nome per ciascuna riga;</li>
+                <li>-fprint → come prima, ma output su file;</li>
+                <li>-print0 → come print, ma non va a capo (stampa tutto su stessa riga);</li>
+                <li>-exec command → esegue il comando , includendo nome e path (es. find . -name “*.txt” -exec mv \{} \{}.back \; → trova tutti i file.txt nella directory corrente e li sostituisce con i file.txt.back). I comandi avranno come argomento quello che trovo con la find se uso \{};</li>
+                <li>-delete → elimina ciò che trovo.</li>
+            </ul>
+        </li>
+        <li>cut [opzioni] file → rimuove sezioni specifiche del file indicato (opzioni qui a destra);</li>
+        <li>tr [opzioni] set1 [set2] → copia lo stdin nello stdout, effettuando le sostituzioni oppure le cancellazioni specificate (va usato ridirigendo il suo input con l’output di altri comandi) [es. cat file.txt | tr ab BA → visualizzo su stdout le righe di file.txt, sostituendo “a” con “B” e “b” con “A”];</li>
+        <li>uniq [options] [inFile] [outFile] → riporta oppure elimina le righe ripetute nel file in ingresso (richiede che il file sia ordinato; senza opzioni elimina le righe duplicate);</li>
+        <li>basename nome [estensione] → elimina il path (e il suffisso se uso anche l’estensione nel comando) dal nome di un file (utile nelle manipolazioni sui nomi dei file negli script shell);</li>
+        <li>dirname nome → elimina il nome del file, tenendo solo il suo path;</li>
+        <li>sort [opzioni] [file] → ordina i file in input;</li>
+        <li>grep [opzioni] pattern [file] → cerca nel contenuto di file di input le righe che hanno un “match” con il pattern fornito e le visualizza su stdout. La grep però usa solo le regex basic, quindi se vogliamo usare le regex extended dobbiamo usare egrep o grep -E;</li>
+    </ul>
+    <p class="mb-1">Vediamo un ESEMPIO di utilizzo di filtri:</p>
+    <ul class="livello3">
+        <li>Visualizzare tutte le righe dei file di estensione “.txt” che contengono una stringa palindroma: grep -E -e “(.)(.).\2\1” *.txt;</li>
+        <li>Per ogni file di estensione “txt” presente nel direttorio corrente ricavare il nome e il numero di caratteri presenti nel file. L’elenco venga ordinato in base al numero di caratteri in ordine numerico inverso e memorizzato nel file “stat.txt”: find . -name “*.txt” -exec wc -c ‘{}’ \; | sort -rn -k 1 > stat.txt;</li>
+        <li>Trovare tutti i file di estensione “txt” nel direttorio “/home” memorizzati tra il livello di profondità 3 (incluso) e il livello di profondità 5 (incluso) dell’albero dei direttori e che siano leggibili. Di questi modificare il proprietario in “ugo”: find /home -mindepth 3 -maxdepth 5 -name “*.txt” -readable -exec chown “ugo” ‘{}’\;.</li>
+    </ul>
+    <p class="mb-2">La SHELL è lo strato più esterno dell’OS (fornisce interfaccia utente [interpreta i comandi utente]), ma in UNIX non è parte del kernel (viene trattato come un normale processo utente). Ogni shell permette i comandi di linea e la scrittura di “script” (programmi, scritti per evitare di ripetere sequenze di comandi, automatizzando operazioni ripetitive). Noi vedremo la shell “BASH” (dentro /bin/sh). Una shell può termina con il comando exit o il carattere EOF (di solito ctrl+d). All’avvio della shell abbiamo dei file di avvio (start-up files) che possono essere file di login (shell viene eseguita dopo la password, si attivano /etc/profile [script globale] o ~/.bash_profile [script utente]) o di non-login (shell eseguita digitando la sua icona o menù di sistema, si attiva ~/.bashrc).</p>
+    <p class="mb-1">Importante l’ESPANSIONE DELLA SHELL, ovvero ci sono alcuni caratteri che sono particolari nelle shell e possono essere usati per usare delle variabili:</p>
+    <ul class="livello2 mb-2">
+        <li>PARENTESI → se dichiaro nome=Gian e poi faccio:
+            <ul class="livello3">
+                <li>echo {$nome}marco ottengo {Gian}marco come output;</li>
+                <li>echo ${nome}marco ottengo Gianmarco.</li>
+            </ul>
+        </li>
+        <li>QUOTING:
+            <ul class="livello3">
+                <li>Apici (‘’)→ identificano una stringa al cui interno non abbiamo variabili espanse;</li>
+                <li>Virgolette(“”) → identificano una stringa al cui interno abbiamo variabili espanse;</li>
+                <li>Backslash (\) → identifica il carattere di escape (come C).</li>
+            </ul>
+        </li>
+        <li>OUTPUT → possiamo prendere l’output di un comando usando $(…) e memorizzarlo in una variabile [es. d=$(date) metto l’output del comando date dentro la variabile d];</li>
+        <li>HISTORY → ogni shell ricorda l’elenco degli ultimi comandi digitati (elenco contenuto nel file .bash_history) e possiamo usare questo elenco con i comandi history [mostra l’elenco], !str [esegue l’ultimo comando che inizia con str] e ^str1^str2 [sostituisco nell’ultimo comando str1 con la str2 e lo eseguo nuovamente];</li>
+        <li>ALIAS → nelle shell possiamo definire nomi nuovi per comandi esistenti con il comando alias [es. alias ciao=”cd ./..” farà in modo che ogni volta che seguo il comando ciao, verrà eseguito il comando cd ./..].</li>
+    </ul>
+    <p class="mb-3">⚠️Negli script di shell sono importanti gli spazi (var=ciao è diverso da var = ciao); negli script, le variabili contengono solo stringhe! Posso usare queste variabili con il $ per usarle come stringhe nei vari comandi; se invece scrivessi nel terminale semplicemente $var, allora la shell proverebbe ad eseguire la var come un comando di nome var. Inoltre i comandi sulla stessa riga devono essere separati dai “;”.</p>
+    <p class="mb-2">Gli SCRIPT Bash sono memorizzati in file.sh (anche se in Linux posso dare ogni estensione ai file perché non è importante l’estensione). Gli script bash devono iniziare con la riga #!/bin/bash (i commenti in bash sono scritti come in python con #), terminare con exit numero (in generale exit 0 = true) [ricorda che il comando echo $? può essere usato dopo il comando per darci il valore di ritorno del comando/script] e per eseguirlo devo dargli i permessi di esecuzione (chmod +x file.sh).</p>
+    <p class="mb-3">Posso eseguirli in maniera diretta (ovvero da terminale con il nome del file, classico modo) dove viene aperta una nuova shell; in maniera indiretta (ovvero con il comando source file.sh, che mi esegue lo script riga per riga e non richiede la riga iniziale dello script bash) invece, siamo nella stessa shell (infatti il comando exit contenuto nello script bash, mi chiuderà anche la shell chiamante).</p>
+    <p class="mb-2">I parametri/argomenti possono essere passati da linea di comando, ovvero come l’argv in C, ma qui saranno contenuti dentro $0 = nome dello script (come argv[0] in C), $1, $2, etc… Il comando shift effettua uno shift dei parametri verso sinistra ($0 rimane invariato). Parametri speciali sono $* = intera lista dei parametri passati, $# = numero dei parametri (tolto $0) e $$ = PID del processo (utile se devo eseguire lo script da più shell).</p>
+    <p class="mb-1">Le VARIABILI contengono stringhe e si assegnano con variabile=”valore” e si usano con $variabile. Le variabili possono essere LOCALI (di shell, ovvero solo nella shell corrente) o GLOBALI (di ambiente, disponibili in tutte le shell). Il comando set mi elenca tutte la variabili locali definite e il loro valore; il comando unset variabile mi cancella il valore di una variabile. Il comando export trasforma una variabile locale in una variabile globale (ovvero permette la sua visibilità anche ad altri processi); le variabili globali elencate con comando env.</p>
+    <p class="mb-1">Alcune variabili di ambiente sono predefinite:</p>
+    <ul class="livello3">
+        <li>$? → memorizza il valore di ritorno dell’ultimo comando (0 in caso di successo, diverso da 0 in caso di errore);</li>
+        <li>$SHELL → indica la shell corrente;</li>
+        <li>$LOGNAME → indica lo username usato per il login;</li>
+        <li>$HOME → indica la home directory dell’utente corrente;</li>
+        <li>$PATH → memorizza l’elenco dei direttori separati da ‘:’.</li>
+    </ul>
+    <p class="mb-2">Il comando read [opzioni] var1 var2 … varN legge una riga da stdin e salva le varie stringhe da riga di comando nelle variabili var1, var2, … varN; le opzioni sono -n nchars (ritorna dalla lettura dopo nchars caratteri senza aspettare lo \n) e -t nseconds (ritorna 1 se non si introducono dati entro nseconds secondi).</p>
+    <p class="mb-2">I comandi di output sono echo e printf; noi useremo echo che visualizza i propri argomenti, separati da spazi e terminati con un carattere newline; le opzioni sono -e (interpreta i caratteri di escape, es. se negli argomenti ho “ciao\nciao” stampa ciao, va a capo e stampa ciao) e -n (sopprime il newline finale).</p>
+    <p>Per esprimere espressioni matematiche si usa il comando let (es. se ho i=1 e poi scrivo let ”v1=i+1” oppure let v1=i+1 oppure let v1=$i+1, mi stampa in tutti e 3 i casi il numero 2).</p>
+    <p class="mb-2">Il costrutto condizionale if-then-fi verifica se l’uscita di una sequenza di comandi è 0, e se lo è, li esegue (si può anche estendere con if-then-else-fi o anche annidandoli o anche con if-then-elif-then-else-fi).</p>
+    <p class="mb-2">Il costrutto iterativo for var in [list] do…done esegue i comandi specificati, una volta per ogni valore assunto dalla variabile var nella lista list.</p>
+    <p class="mb-2">C’è anche il costrutto iterativo while [ condizione ] do…done dove iteriamo fino a quando condizione è vera.</p>
+    <p class="mb-1">⚠️Ci sono dei modi particolari di usare il while per leggere un file e per stampare cosa si legge, ovvero:</p>
+        <ul class="livello3">
+            <li>PAROLA PER PAROLA (passo il nome del file in input da linea di comando in $1):
+                <pre><strong class="consolas">
+for i in $(cat $1); do
+    echo "WORD: $i"
+done
+                </strong></pre>
+            </li>
+            <li>RIGA PER RIGA (passo il nome del file in input da linea di comando in $1):
+                <pre><strong class="consolas">
+while read i; do
+    echo "LINE: $i"
+done &lt; $1
+                </strong></pre>
+            </li>
+            <li>CARATTERE PER CARATTERE (passo il nome del file in input da linea di comando in $1):
+                <pre><strong class="consolas">
+while read -n 1 i; do
+    echo "CHAR: $i"
+done &lt; $1
+                </strong></pre>
+            </li>
+        </ul>
+    <p class="mb-1"><mark>Esercizio</mark> - Scrivere uno script bash in grado di visualizzare tutti i file del direttorio corrente con estensione ".c", che contengono almeno una volta la stringa "POSIX":</p>
+    <pre><strong class="consolas">
+#!/bin/bash
+for word in $(ls *.c); do
+    egrep --quiet -e "POSIX" $word
+    if [ $? -eq 0 ]
+    then
+        more $word
+    fi
+done
+    </strong></pre>
+</div>
+{% endblock %}

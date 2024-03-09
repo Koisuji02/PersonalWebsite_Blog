@@ -1,0 +1,167 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p class="mb-2">L’<span class="text-primary">INSTRADAMENTO</span> (Routing) viene effettuato consultando le tabelle di instradamento per ogni PDU (in una rete datagram) o per ogni connessione (in una rete a circuito virtuale); queste tabelle contengono informazioni tipo qual è il prossimo router (“next-hop”) per ogni destinazione. Quindi si hanno indirizzi univoci, mapping degli indirizzi, tariffazione su rete pubblica e controllo di congestione. Riguardo l’instradamento, ci sono 3 elementi da considerare:</p>
+    <ol>
+        <li><strong class="text-primary">PROTOCOLLI DI INSTRADAMENTO</strong> (routing protocols) → definiscono la modalità di scambio di informazioni sullo stato della rete, al fine di costruire le tabelle di instradamento;</li>
+        <li><strong class="text-primary">FORWARDING</strong> → operazioni necessarie per instradare i singoli pacchetti verso la giusta porta di uscita (usando le tabelle per inoltrare i pacchetti);</li>
+        <li><strong class="text-primary">ALGORITMI DI INSTRADAMENTO</strong> → operazioni necessarie per scegliere un buon percorso dal nodo sorgente al nodo destinazione (date le informazioni sullo stato della rete). Da qui, creano le tabelle di instradamento.
+            <p>La topologia della rete viene infatti trasformata in un <span class="sottolineato">GRAFO PESATO</span> (nodi = vertici, canali = archi) [pesato perché  si assegna un “costo” (peso) agli archi]; il “buon” percorso da scegliere è il percorso a costo minimo. Il costo degli archi dipende dalla distanza, dal ritardo, dal costo effettivo ($), dal livello di congestione; può essere statico (costante) o variabile a seconda dello stato di rete.</p>
+            <p class="mb-2">Ci sono diversi algoritmi che non richiedono il coordinamento dei nodi (random [scelgo porta casuale], flooding [instrado verso tutte le porte disponibili], deflessione-hotpotato [instrado verso la porta corretta se libera, altrimenti su una porta libera]). Ma noi vogliamo il percorso “ottimo”, per questo si usano algoritmi più complessi. Definendo il calcolo del percorso:</p>
+            <ul class="livello3 mb-2">
+                <li>Centralizzato = 1 nodo calcola il percorso di tutti gli altri;
+                    <ul class="livello2">
+                        <li class="pro">Pro: <span class="text-dark">possibili algoritmi complessi, instradamento coerente per tutti i nodi</span></li>
+                        <li class="contro">Contro: <span class="text-dark">sensibile ai guasti del nodo centrale e congestione intorno al nodo centrale</span></li>
+                    </ul>
+                </li>
+                <li>Distribuito = tutti i nodi comunicano tra loro (con i protocolli di instradamento) e calcolano i percorsi;
+                    <ul class="livello2">
+                        <li class="pro">Pro: <span class="text-dark">resistente ai guasti, comunicazione uniforme su tutta la rete</span></li>
+                        <li class="contro">Contro: <span class="text-dark">richiede intelligenza a tutti i nodi (se comunicazioni errate → errato instradamento)</span></li>
+                    </ul>
+                </li>
+            </ul>
+            <p>Allora classifichiamo gli <strong>ALGORITMI DISTRIBUITI</strong> a seconda di quanto i nodi hanno informazioni sulla rete:</p>
+            <ul>
+                <li><strong class="text-primary">LINK STATE</strong> [LS] = informazione GLOBALE (tutti i nodi conoscono la topologia di rete completa, compresi i costi dei canali, e tutti i nodi si scambiano informazioni). Ogni nodo invia informazioni del costo dei suoi canali a tutti gli altri nodi (in broadcast) e quindi ogni nodo calcola i percorsi a costo minimo (ovvero i CAMMINI OTTIMI) verso tutti gli altri nodi, usando l’ALGORITMO DI DIJKSTRA (algoritmo iterativo [dopo k iterazioni si ottengono i cammini ottimi per k destinazioni] che funziona con solo costi positivi [ricorda algoritmi]).
+                    <p>⚠️Se abbiamo m nodi, ad ogni iterazione controllo tutti i nodi ancora non appartenenti ad N e li aggiungo alla distanza minima, perciò ho complessità quadratica O(M^2). Quindi ci sono algoritmi migliori, a complessità logaritmica O(M log(M))!</p>
+                </li>
+                <li><strong class="text-primary">DISTANCE VECTOR</strong> [DV] = informazione PARZIALE  (i nodi conoscono solo i nodi a cui sono fisicamente collegati e solo i costi dei canali a cui sono collegati; solo i nodi adiacenti comunicano tra loro). Continuano fino a quando i nodi non scambiano più informazioni, terminando in modo autonomo (nessun segnale di “fine algoritmo”). Ogni nodo scambia periodicamente con i nodi adiacenti un vettore contenente le destinazioni che può raggiungere e la distanza dalle destinazioni misurata in costo. Il nodo che riceve il vettore lo confronta con la propria RT (routing table, tabella di instradamento [ne abbiamo parlato sopra]), aggiungendo nuove destinazioni, cambiando i percorsi se i nuovi sono più corti e modificando i costi se usa un nodo adiacente come miglior scelta. Quindi rispetto agli algoritmi LS, è facile, ma è lento a convergere e propaga errori di routing. Per implementarlo si usa l’ALGORITMO DI BELLMAN-FORD, cioè si usa la tabella delle distanze (ogni nodo ha la sua tabella con 1 riga per ogni possibile destinazione e 1 colonna per ogni nodo adiacente). È iterativo, asincrono e distribuito (ogni nodo avvisa quelli adiacenti solo quando il suo cammino ottimo verso una destinazione è cambiato); ogni nodo esegue un loop infinito (aspettando una modifica nel costo del canale o un messaggio da un nodo adiacente), ricalcola la tabella delle distanze e, se il percorso migliore  verso qualche destinazione è cambiato, avvisa i vicini.
+                    <p>⚠️Se viene modificato il costo di un canale, il nodo rileva la modifica, modifica la tabella delle distanze e, se la modifica migliore dei cammini, avvisa i nodi adiacenti (“good news travels fast”), mentre altrimenti si rileva il problema del “count to infinity”!</p>
+                </li>
+            </ul>
+            <p class="mb-1">⚠️Se ho M nodi (con E canali ciascuno), la complessità:</p>
+            <ul>
+                <li>LS → ogni nodo invia O(M) messaggi, ciascuno lungo O(E), quindi O(E M)</li>
+                <li>DV → ogni messaggio contiene tutte le destinazioni O(M) ed è mandato a O(E) vicini, quindi O(E M)</li>
+            </ul>
+            <p class="mb-1">Con velocità di convergenza:</p>
+            <ul>
+                <li>LS → ogni volta che un link state è propagato, ho nuova topologia (convergenza immediata)</li>
+                <li>DV → scelte nodo dipendono dalle scelte degli adiacenti (convergenza variabile)</li>
+            </ul>
+            <p class="mb-1">Cosa succede se un nodo non funziona bene?</p>
+            <ul>
+                <li>LS → i nodi possono annunciare costi dei canali scorretti, ma dato che ogni nodo ha la sua tabella, al prossimo annuncio tutto si corregge;</li>
+                <li>DV → i nodi possono annunciare costi dei cammini scorretti, ma, dato che ogni annuncio è usato da tutti i nodi, gli errori si propagano nella rete (errori di routing creano anelli).</li>
+            </ul>
+        </li>
+    </ol>
+    <p class="mb-1">Lo strato3 di rete gestisce le problematiche legate allo strato2 collegamento, tra cui:</p>
+    <ul>
+        <li>gestione non efficiente della ridondanza dei link (canali, generati dall’algoritmo “spanning tree”) [che potrebbe portare ad una “broadcast storm”, ovvero un casino di pacchetti che girano];</li>
+        <li>eccessiva dimensione  della tabella di routing degli switch in quanto gli switch non supportano l’aggregazione (“route aggregation”) degli indirizzi MAC in tabella (anche perché i MAC sono univoci). Proprio per questo ho bisogno di nuovi indirizzi (che saranno gli IP) dove ci sono cose comuni sugli indirizzi, in modo da poterli aggregare e ridurre le dimensioni della tabella;</li>
+        <li>gestione e limitazione del traffico broadcast dello strato2 (perché il broadcast è utile, ma bisogna limitarne l’espansione sulla rete [usando dei router per esempio]).</li>
+    </ul>
+    <p>Quindi, specialmente per reti grosse, lo strato3 è essenziale. Ma come è strutturato lo strato di rete? I pacchetti datagram (rete a pacchetto) vengono incapsulati e inviati; chi li riceve, li manda allo strato4 di trasporto. Lo strato3 è basato su una rete di <strong class="text-primary">ROUTER</strong>, che esamina l’intestazione di tutti i datagram-IP; in ogni host e in ogni router ci sono i protocolli di strato3.</p>
+    <p class="mb-1">Le reti DATAGRAM danno uno strato3 “connectionless”, mentre le VC (Circuito Virtuale) lo danno “connection”; ma qualie si preferisce? La preferenza varia a seconda dell’applicazione. Ci sono 2 applicazioni principali:</p>
+    <ul>
+        <li><span class="sottolineato">ATM</span> [VC] → evoluta dalla telefonia, simile alla conversazione umana, complessità nella rete;</li>
+        <li><span class="sottolineato">Internet</span> [DATAGRAM] → scambio di dati tra computer, c’è poca uniformità dei link (molti tipi diversi di link), prevede semplicità nella rete e complessità all’edge (cioè il terminale, la stazione) [la rete più importante al mondo, basata su IP, per questo ne parliamo nel dettaglio].</li>
+    </ul>
+    <p class="mb-1">La <strong class="text-primary">struttura dell'IP DATAGRAM</strong> (ovvero la PDU dello strato3) dipende anche dalla versione dell’IP: infatti IPv4 ha parole di 32 bit, mentre IPv6 ha parole di 128 bit (questo perché nell’IPv6 ci sono più indirizzi possibili). I campi del datagram-ip sono:</p>
+    <ul class="mb-2">
+        <li>ver → versione dell’IP (IPv4 o IPv6);</li>
+        <li>header length → lunghezza dell’intestazione (4 bit);</li>
+        <li>type of service → tipo di servizio che viene effettuato (DS). Si usa nei servizi interni ai vari provider, non su Internet a livello globale;</li>
+        <li>length → dimensione totale in byte del datagram (16 bit, quindi massima dimensione 2^16-1=65353 Byte);</li>
+        <li>16-bit identifier + flg + fragment offset → usati per frammentazione e riassemblaggio (ne parleremo dopo);</li>
+        <li>time to live (TTL) → numero massimo rimanente di “hops” che il datagram può attraversare (cioè numero di canali/archi che il pacchetto può ancora attraversare prima di essere ucciso). Per non fare rimanere inutilmente un datagram in rete;</li>
+        <li>upper layer (o protocol, payload) → protocollo seguito dal datagram (quindi TCP, UDP o altri);</li>
+        <li>header checksum → controlla errore sull’header del pacchetto, in quanto se è errata l’intestazione si butta il pacchetto [quindi se è errata l’intestazione, il router scarta il datagram, se invece è errato il payload, chi riceve scarta il pacchetto]. Dato che però il TTL va ricalcolato ad ogni router, viene ricalcolato ad ogni router anche l’header checksum (per controllare che anche il TTL nuovo sia ok);</li>
+        <li>32 bit indirizzo IP sorgente;</li>
+        <li>32 bit indirizzo IP destinazione;</li>
+        <li>opzioni;</li>
+        <li>dati.</li>
+    </ul>
+    <p>Per quanto riguarda la “fragmentation & reassembly” (frammentazione e riassemblaggio) dei datagram, questo accade perché i link hanno un MTU (Max Transfer Size), quindi i datagram grossi vengono frammentati  in datagram più piccoli nella rete; questi vengono riassemblati solo nella destinazione finale. Oggi però questo non esiste più (infatti i campi di frammentazione e riassemblaggio sono stati eliminati nell’IPv6).</p>
+    <p>Parlando ora dell’indirizzo IP, questo è un identificatore da 32 bit usato per le interfacce di router e host (ricordarsi infatti che l’indirizzo IP non è del dispositivo, ma dell’<strong>INTERFACCIA</strong>, ovvero la connessione tra host/router con il link fisico [un dispositivo può avere più interfacce]).</p>
+    <p>Ma come sono connesse le interfacce? Gli indirizzi IP sono composti da parte <strong>SUBNET</strong> (bit alti, ovvero fino alla 5^ cifra, es. 223.1.2.1) e parte <strong>HOST</strong> (bit bassi). Il SUBNET è l’insieme delle interfacce del dispositivo con la stessa parte subnet, ovvero una LIS [Reti logiche]; ad ogni rete logica (subnet) corrisponde una rete fisica (ovvero l’insieme dei dispositivi che posso fisicamente raggiungere), ovvero l’IP assume corrispondenza biunivoca tra subnet e reti fisiche. Host sulla stessa subnet = comunicazione diretta; Host su subnet diverse = comunicazione indiretta (passando da router, usata per usare gli indirizzi IP al posto del MAC) [anche i collegamenti tra router sono una subnet].</p>
+    <p>⚠️Parliamo di ONE-ARM ROUTER se abbiamo più subnet nella stessa rete fisica, dove nonostante i 2 host possano comunicare direttamente tra loro, essendo di 2 subnet diverse, devono comunque passare da un router (subnet diverse = comunicazione indiretta sempre) [come le VLAN, dove avevamo detto che se 2 VLAN diverse vogliono comunicare tra loro, allora usano un router].</p>
+    <p class="mb-1">Di interesse sono gli <strong class="text-primary">INDIRIZZI IP "SPECIALI"</strong>:</p>
+    <ul>
+        <li>Subnetwork ID → Subnet + tutti 0;</li>
+        <li>Limited broadcast (ovvero broadcast su rete locale) → tutti 1;</li>
+        <li>Directed broadcast for network (ovvero broadcast per tutti i router/host che hanno quella determinata subnet) → Subnet + tutti 1;</li>
+        <li>Loopback → 127 + indifferente (solitamente 127.0.0.1), ovvero il localhost (es. quello che uso quando provo siti web su vscode) cioè mi fermo all’IP senza scendere allo strato2.</li>
+    </ul>
+    <p>Come avevamo detto ogni dispositivo LAN ha il suo indirizzo LAN (ovvero il MAC) univoco nel mondo; mentre invece gli indirizzi IP hanno un legame logico a livello geografico (es. tutti i dispositivi connessi alla rete del poli avranno l’inizio dell’indirizzo IP uguale): quindi non c’è la portabilità di avere un indirizzo univoco ovunque vado, indipendentemente da dove sono [MAC], ma si ha un significato topologico che ci permette di avere un routing scalabile [IP]. Ma seppur scalabile, avremmo comunque tantissime righe nella tabella di indirizzamento di ogni router: per risolvere uso l’<span class="text-primary">INDIRIZZAMENTO GERARCHICO</span> a livello geografico.</p>
+    <div class="row mb-3">
+        <div class="col-2"></div>
+        <img class="img-fluid col-8" src="{{url_for('static', filename='isp1.png')}}" alt="isp1">
+        <div class="col-2"></div>
+    </div>
+    <p>Come vengono assegnate le net_part degli indirizzi IP alle organizzazioni? Le associazioni che gestiscono gli IP usano danno dei grossi indirizzi IP (es. terminanti con “/8”, ovvero quelle equivalenti alle classi A di una volta) ai grossi ISP (Internet Service Provider). Gli ISP danno a loro volta gli indirizzi IP di questo gruppone alle singole organizzazioni (es. terminanti con “/23”). Con questo INDIRIZZAMENTO GERARCHICO (necessario per scalare il routing), si facilita il routing (instradamento) nella rete perché raggruppo più indirizzi IP in un ISP: in questo modo i router in Internet comunicano con i vari ISP e non con i singoli indirizzi IP (saranno poi gli ISP che parleranno poi con i singoli indirizzi IP).</p>
+    <div class="row mb-3">
+        <div class="col-3"></div>
+        <img class="img-fluid col-6" src="{{url_for('static', filename='isp2.png')}}" alt="isp2">
+        <div class="col-3"></div>
+    </div>
+    <p><mark>Come si determina l’indirizzo MAC dell’interfaccia, sapendo il suo indirizzo IP?</mark> Ogni nodo (router/host) di una LAN ha la sua “<strong class="text-primary">ARP</strong> TABLE”, con gli indirizzi IP/MAC di alcuni nodi della stessa LAN (con in più il TTL, ovvero il TimeToLive dopo cui l’indirizzo viene dimenticato). Se un nodo vuole l’indirizzo MAC di un altro e ha solo il suo IP, allora chiede in broadcast “chi ha questo indirizzo IP?” [ARP REQUEST] e riceve in risposta unicast dal nodo con quell’IP “sono io e questo è il mio indirizzo MAC!” [ARP REPLY]. Questo fa parte del protocollo ARP, che sta a metà tra lo strato 2 e il 3; infatti i pacchetti ARP sono delle trame, non dei datagram!</p>
+    <p class="mb-1"><mark>Cosa succede invece nella <strong class="text-primary">COMUNICAZIONE INDIRETTA</strong>? (ovvero attraverso router).</mark>Facciamo un esempio dove mandiamo un datagram dal nodo A al nodo B tramite R (router), supponendo che:</p>
+    <ul class="mb-1">
+        <li>A conosca l’indirizzo IP di B (questo avviene grazie ai DNS [Domain Name System], dove tramite l’URL [es. www.facebook.com] questo tira fuori l’IP di quella pagina, tramite un’associazione “nome_sito-indirizzoIP” → in questo modo si ha un plug&play perché anche la gente che non sa niente può usare Internet);</li>
+        <li>A conosca l’indirizzo IP del 1° hop router (questo avviene con il DHCP);</li>
+        <li>A conosca l’indirizzo MAC di R (questo avviene grazie ad ARP).</li>
+    </ul>
+    <p class="mb-1">Fatte queste ipotesi, vediamo i passaggi:</p>
+    <ol>
+        <li>A crea il datagram IP con sorgente IP A e destinazione B. Dato che gli indirizzi IP sono su reti diverse, allora entra in gioco Ethernet e viene creata la trama con l’indirizzo MAC del gateway come involucro del datagram IP da mandare a B, in quanto per mandare il datagram IP a B, deve passare dal default gateway perché è una comunicazione indiretta (infatti l’indirizzo MAC è quella del gateway);</li>
+        <li>la trama arriva al router R, che toglie l’involucro trama e tiene solo il datagram IP. Il router è fondamentale perché imposta il MAC destinazione a B; questo perché il router, tramite l’IP di B capisce che basta ora una comunicazione diretta dal router a B. Quindi crea un altro involucro trama con l’indirizzo MAC di B e invia tutto a B;</li>
+        <li>B riceve la trama: spacca l’involucro trama, spacca il datagram e tiene solo il segmento nel datagram, che invia agli strati sopra.</li>
+    </ol>
+    <p>Ora parliamo invece dell’<span class="text-primary">INDIRIZZAMENTO IP</span>: all’inizio si usava il “<strong>CLASSFUL ADDRESSING</strong>” (divisione statica tra la parte di rete e la parte di host di un indirizzo IP) [poco flessibile, senza subnet]. Poi si è passati al “<strong>SUBNETTING</strong>”, dove si usa un numero di bit variabile per la rete (VLSM, Variable Length Subnet Masking) usando delle sottoreti [SUBNET]. Poi però si è preferito passare al “<strong>CLASSLESS ADDRESSING</strong>”, ovvero si elimina il concetto di classi IP (quindi eliminato il concetto di subnet → si parla infatti di “net mask”).</p>
+    <p>Infatti in passato si avevano le “classi” che venivano segnate dai bit iniziali:</p>
+    <div class="row mb-3">
+        <div class="col-2"></div>
+        <img class="img-fluid col-8" src="{{url_for('static', filename='classi.png')}}" alt="classi">
+        <div class="col-2"></div>
+    </div>
+    <p>Per quanto riguarda il SUBNETTING (ovvero la VLSM), <mark>si prende l’indirizzo IP di una delle classi viste sopra e si definiscono delle subnet più piccole</mark>. A questo indirizzo però si aggiunge la SUBNET_MASK (altro indirizzo che viaggia in coppia con la NETWORK_ID, composto da tutti “1” nella parte di subnet e tutti “0” nella parte di host [es. 11111111111111111111111-000000000]), il cui compito è quello di identificare la rete [infatti si aggiunge una colonna nella tabella dei nodi proprio per la subnet_mask].</p>
+    <p>Per quanto riguarda invece il CLASSLESS ADDRESSING (o CIDR, Classless InterDomain Routing), si elimina il concetto di classe, ovvero ce ne sbattiamo dei 1^ bit della classe; gli indirizzi IP sono composti da <span class="text-primary">NETWORK_ID + PREFIX_LENGTH</span> (ovvero il numero di bit riservati alla net part e quindi tolti agli host) oppure <span class="text-primary">NETWORK_ID insieme a NETMASK</span> (come prima tutti “1” nella parte di rete e “0” nella parte di host):</p>
+    <div class="row mb-3">
+        <div class="col-3"></div>
+        <img class="img-fluid col-6" src="{{url_for('static', filename='CIDR.png')}}" alt="CIDR">
+        <div class="col-3"></div>
+    </div>
+    <p>⚠️In generale, ogni nodo della rete dovrà avere un indirizzo IP, una netmask e un default gateway (il 1° hop router)!!!</p>
+    <p class="mb-1">Usando l'<strong>AND BIT-A-BIT</strong> possiamo invece capire altre cose:</p>
+    <ul>
+        <li><mark>Come fa un host a capire i suoi indirizzi IP?</mark> Deve fare l’AND bit-a-bit (bit-wise AND) tra i suoi indirizzi IP e le sue netmask, ottenendo l’indirizzo della rete di appartenza;</li>
+        <li><mark>Come fa un host a capire l’indirizzo IP della destinazione che deve raggiungere?</mark> Fa un AND bit-a-bit tra l’IP destinazione e la netmask del nodo (non della destinazione);</li>
+        <li><mark>Come fa un router a selezionare la corretta porta di uscita?</mark> Fa l’AND bit-a-bit tra l’indirizzo IP destinazione di un pacchetto e la netmask di ogni “entry” (riga) della sua routing table (tabella di indirizzamento).</li>
+    </ul>
+    <p class="mb-1"><mark>Come funziona invece una vera tabella di indirizzamento (<strong class="text-primary">ROUTING TABLE</strong>)?</mark> Ci sono 3 tipi di ROUTES:</p>
+    <ul class="mb-2">
+        <li><span class="text-primary">DIRETTE</span> (D) → reti direttamente connesse al router. Devo indicare la porta locale del router che mi permette di raggiungere quelle reti; si trova l’INTERFACCIA LOCALE (perché si ha collegamento diretto);</li>
+        <li><span class="text-primary">INDIRETTE</span> → non scrivo l’indirizzo IP del canale usato, ma l’indirizzo IP dell’interfaccia che devo raggiungere (in quanto spesso dovrò passare da più “HOP”) ovvero il mio NEXT HOP [INTERFACCIA REMOTA]:
+            <ul class="livello2">
+                <li><span class="sottolineato">STATICHE</span> (S) → scritte manualmente nella tabella;</li>
+                <li><span class="sottolineato">DINAMICHE</span> → configurate dai protocolli nella tabella.</li>
+            </ul>
+        </li>
+    </ul>
+    <p>Nello scrivere l’indirizzo IP del NEXT HOP non serve scrivere la netmask (prefix), ma solo l’indirizzo IP.</p>
+    <p class="mb-1"><mark>Come fa invece un host ad avere un indirizzo IP?</mark> Si usa il <strong class="text-primary">DHCP</strong> (Dynamic Host Configuration Protocol, protocollo di strato applicazione [strato 5-6-7]) [approccio plug&play], ovvero l’host (DHCP client) riceve dinamicamente il suo indirizzo IP da un DHCP server nella rete con i seguenti passaggi:</p>
+    <ol class="mb-1">
+        <li>Host fa in broadcast la richiesta “DHCP discover” (il datagram [strato3] sarà infatti imbustato in una trama broadcast [strato2]). Questo perché tutti i nodi processano il datagram inviato, ma solo il DHCP server sa interpretarlo;</li>
+        <li>Server risponde con “DHCP offer”. Sono delle offerte, infatti l’host riceve più offerte dal server DHCP, ma ne sceglie solo 1 (la prima);</li>
+        <li>Host richiede il suo IP con “DHCP request”. L’host mette come indirizzo IP di partenza, non il suo, ma il broadcast: questo perché gli altri nodi sappiano l’indirizzo IP scelto dall’host;</li>
+        <li>Server manda l’indirizzo IP dell’host con “DHCP ack”.</li>
+    </ol>
+    <p>Le richieste/risposte sono fatte con i datagram: infatti troviamo gli indirizzi IP, ma affianco troviamo anche gli indirizzi delle porte (strato4) [16bit, quindi scritti come un singolo numero dopo la virgola]. Il DHCP ha un approccio “SOFT STATE”, ovvero il server imposta un tempo di vita (“lifetime”) all’indirizzo IP dell’host (dopo cui il server può riassegnare l’indirizzo IP) [a differenza dell’approccio HARD STATE, dove deve avvenire un’azione particolare (un evento, TRIGGER) per fare in modo che l’indirizzo IP sia rilasciato]. Nelle reti si usa quasi solo SOFT STATE. Inoltre i primi 2 passaggi sono opzionali, perché una volta finito il lifetime, un host può direttamente fare la “DHCP request” se rivuole lo stesso indirizzo IP!</p>
+    <p class="mb-1">Noi nelle nostre case abbiamo i nostri indirizzi IP, ma non li abbiamo richiesti a nessuno. Com’è possibile? Usiamo degli indirizzi IP riservati a reti per uso privato (<span class="text-primary">INDIRIZZI IP PRIVATI</span>); questi non sono accessibili da aree remote della rete (in quanto non sono annunciati su Internet). Questi indirizzi riservati sono 1 di classe A, 16 di classe B, 256 di classe C. <mark>Ma se queste reti private non si connettono ad Internet, come posso andare su Internet?</mark> Il <strong class="text-primary">NAT</strong> (Network Address Translation) permette ad una rete privata di connettersi ad Internet:</p>
+    <ul>
+        <li>Se un host di una rete privata vuole raggiungere un web server su Internet, l’host manderà il pacchetto al router (home gateway), qui il pacchetto cambierà indirizzo IP sorgente, diventando quello pubblico del router (in figura passiamo quindi dall’host 10.0.0.1 ad avere come indirizzo IP [quando entra in Internet] 138.76.29.7), salvando però quale host della rete privata ha mandato il pacchetto all’origine; da Internet all’Host, quando riceverò la conferma del pacchetto, tramite la tabella del router dove abbiamo salvato l’host di partenza, il router manderà la conferma all’host corretto.
+            <div class="row mb-3">
+                <div class="col-2"></div>
+                <img class="img-fluid col-8" src="{{url_for('static', filename='NAT.png')}}" alt="NAT">
+                <div class="col-2"></div>
+            </div>
+        </li>
+        <li>Quando invece la comunicazione inizia dall’esterno, non si genera la tabella del nostro “home gateway” con dentro l’host specifico (perché non è lui ad avere iniziato la comunicazione); perciò una soluzione potrebbe essere compilare la tabella a mano [“port forwarding”] oppure il “relaying” (usato in Skype; host chiede a nodo esterno di fare da relay [specchio] e anche client chiede a quel nodo di fare da relay, dunque riescono a comunicare).</li>
+    </ul>
+    <p>Infine parliamo anche di <strong class="text-primary">ICMP</strong> (Internet Control Message Protocol), usato dagli host e dai router per comunicare informazioni di livello rete (strato3). L’ICMP message è composto dal campo type, campo code e 8 byte dell’IP datagram. Per quanto riguarda il <span class="text-primary">TRACEROUTE</span>, la sorgente manda una serie di UDP segments alla destinazione; quando gli n datagram arrivano ai router, il router scarta i datagram e manda alla sorgente ICMP messages; quando questi ICMP messages arrivano alla sorgente, questa salva i RTT.</p>
+</div>
+{% endblock %}

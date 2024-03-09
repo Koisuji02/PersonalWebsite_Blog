@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>ASEB (A Simple Engineering Blog) - {% block title %}{% endblock %}</title>
+        <!--! AGGIUNGERE ALTRI CAMPI A SECONDA DEGLI ARTICOLI MESSI -->
+        <meta name="keywords" content="web, blog, html, css, javascript, js, python, c, algorithms, math, mathematical analysis, physics, chemistry, programming techniques, Digital Audio Workstation, DAW, Ableton">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Bootstrap -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+        <!-- style.css -->
+        <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
+        <!-- Font-Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-ezQ+bHv2LG5jz5lECx5ncw5gB5SrMjkccLDcMUp9CO9/S9jp5xO9eUAA8dVN3fGP" crossorigin="anonymous">
+    </head>
+    <body class="total-page">
+        <header>
+            <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-black">
+                <div class="container-fluid">
+                  <span class="navbar-brand mb-0 h1"><strong>ASEB (A Simple Engineering Blog)</strong></span>
+                  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  </button>
+                  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                      <li class="nav-item">
+                        <a class="nav-link {%block home_active%}{%endblock%}" aria-current="page" href="/">Home</a>
+                      </li>
+                      <!--! POST SALVATI DALL'UTENTE (CON IL LIKES)-->
+                      {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                          <a class="nav-link {% block liked_posts_active %}{% endblock %} nowrap" href="{{ url_for('liked_posts') }}">Liked❤</a>
+                        </li>
+                      {% endif %}
+                      <!--! FILTRO PER MATERIA-->
+                      <li class="nav-item">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Materia
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Reti di Calcolatori') }}">Reti di Calcolatori</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Basi di Dati') }}">Basi di Dati</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Informatica-Python') }}">Informatica-Python</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Teoria dei Segnali') }}">Teoria dei Segnali</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Algebra Lineare') }}">Algebra Lineare</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Analisi I') }}">Analisi I</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Analisi II') }}">Analisi II</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Metodi Matematici') }}">Metodi Matematici</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Calcolatori Elettronici') }}">Calcolatori Elettronici</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Fisica II') }}">Fisica II</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Fisica I') }}">Fisica I</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Chimica') }}">Chimica</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Sistemi Operativi') }}">Sistemi Operativi</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Algoritmi e Strutture Dati') }}">Algoritmi e Strutture Dati</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Introduzione al Web') }}">Introduzione al Web</a>
+                                <a class="dropdown-item" href="{{ url_for('home', materia='Tecniche di Programmazione-C') }}">Tecniche di Programmazione-C</a>
+                                <!--! Aggiungi altri elementi per le diverse materie -->
+                            </div>
+                        </div>
+                      </li>       
+                      <!--! RICERCA DEI POST -->             
+                      <li class="nav-item">
+                        <form class="d-flex" action="{{ url_for('search') }}" method="GET">
+                          <input class="form-control me-1" type="search" placeholder="Search" aria-label="Search" name="query">
+                          <button class="btn btn-outline-light" type="submit"><i class="fas fa-search"></i></button>
+                      </form>
+                      </li>
+                      <!-- AUTENTICAZIONE SOLO PER VALUTAZIONI SUI POST -->
+                      {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{current_user.email}}
+                          </a>
+                          <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Esci</a></li>
+                          </ul>
+                        </li>
+                        {% else %}
+                        <li class="nav-item">
+                          <a class="nav-link {%block signup_active%}{% endblock %}" aria-current="page"
+                            href="{{ url_for('signup') }}">Iscriviti</a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link {%block login_active%}{% endblock %}" href="{{ url_for('login') }}">Accedi</a>
+                        </li>
+                      {% endif %}
+                    </ul>
+                  </div>
+                </div>
+              </nav>
+        </header>
+        <div class="container-fluid under-nav">
+          <div class="container-fluid mt-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                  {% for category, message in messages %}
+                    <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+                      {{ message }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endwith %}
+          </div>
+          <div class="row">
+              <aside class="col-lg-3 col-12">
+                <img class="developer-img img-fluid" src="{{url_for('static', filename='developer.jpg')}}" alt="developer-img">
+                <h4 class="whoami developer-txt"><strong>Domizio Mattia</strong></h4>
+                <div class="link-wrapper-mobile" id="link-wrapper-mobile">
+                    <h6 class="developer-txt">PoliTO Student</h6>
+                    <p class="developer-txt">Ingegneria Informatica</p>
+                    <div class="row wrapper-2">
+                      <!-- Font Awesome Github-->
+                      <div class="col-1 col-lg-0"></div>
+                      <a href="https://github.com/Koisuji02" class="col-lg-12 col-4" rel="me"><i class="fa-brands fa-github"></i>&nbsp;GitHub</a>
+                      
+                      <!-- Font Awesome Linkedin-->
+                      <a href="https://www.linkedin.com/in/mattia-domizio-7a07b628b/" class="col-lg-12 col-4" rel="me"><i class="fa-brands fa-linkedin"></i>&nbsp;Linkedin</a>
+                      <!-- Font Awesome Email-->
+                      <a href="mailto:mat.dom1609job@gmail.com" class="col-lg-12 col-3" rel="me"><i class="fas fa-envelope"></i>&nbsp;Email</a>
+                    </div>
+                </div>
+              </aside>
+              <main class="col-lg-9 col-12">
+                  {% block content %}{% endblock %}
+              </main>
+          </div>
+        </div>
+        <footer>
+            {% block fondo %}{% endblock %}
+        </footer>
+        <!-- JS di Bootstrap -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+        <!-- JS di FontAwesome -->
+        <script src="https://kit.fontawesome.com/c694640761.js" crossorigin="anonymous"></script>
+    </body>
+</html>

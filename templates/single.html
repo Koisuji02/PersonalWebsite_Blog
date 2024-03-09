@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Post:{{post.materia}} - {{post.titolo}}{% endblock %}
+
+{% block content %}
+<!--! QUI INIZIA IL BLOCK CONTENT -->
+<div class="contenitore-header-post border border-3 border-black mt-2">
+<h4 class="mb-0 materia_post_singolo col-12 text-center text-decoration-underline {% if post.materia == 'Reti di Calcolatori' %}text-white bg-primary {% elif post.materia == 'Basi di Dati' %}text-white bg-primary {% elif post.materia == 'Informatica-Python' %}text-white bg-primary {% elif post.materia == 'Teoria dei Segnali' %}text-white bg-danger {% elif post.materia == 'Algebra Lineare' %}text-white bg-danger {% elif post.materia == 'Analisi I' %}text-white bg-danger {% elif post.materia == 'Analisi II' %}text-white bg-danger {% elif post.materia == 'Metodi Matematici' %}text-white bg-danger {% elif post.materia == 'Calcolatori Elettronici' %}text-white bg-success {% elif post.materia == 'Fisica II' %}text-white bg-success {% elif post.materia == 'Fisica I' %}text-white bg-success {% elif post.materia == 'Chimica' %}text-white bg-success {% elif post.materia == 'Sistemi Operativi' %}text-white bg-warning {% elif post.materia == 'Algoritmi e Strutture Dati' %}text-white bg-warning {% elif post.materia == 'Introduzione al Web' %}text-white bg-warning {% elif post.materia == 'Tecniche di Programmazione-C' %}text-white bg-warning {% endif %}">{{post.materia}}:</h4>
+<h1 class="mb-0 titolo_post_singolo col-12 text-center {% if post.materia == 'Reti di Calcolatori' %}text-white bg-primary {% elif post.materia == 'Basi di Dati' %}text-white bg-primary {% elif post.materia == 'Informatica-Python' %}text-white bg-primary {% elif post.materia == 'Teoria dei Segnali' %}text-white bg-danger {% elif post.materia == 'Algebra Lineare' %}text-white bg-danger {% elif post.materia == 'Analisi I' %}text-white bg-danger {% elif post.materia == 'Analisi II' %}text-white bg-danger {% elif post.materia == 'Metodi Matematici' %}text-white bg-danger {% elif post.materia == 'Calcolatori Elettronici' %}text-white bg-success {% elif post.materia == 'Fisica II' %}text-white bg-success {% elif post.materia == 'Fisica I' %}text-white bg-success {% elif post.materia == 'Chimica' %}text-white bg-success {% elif post.materia == 'Sistemi Operativi' %}text-white bg-warning {% elif post.materia == 'Algoritmi e Strutture Dati' %}text-white bg-warning {% elif post.materia == 'Introduzione al Web' %}text-white bg-warning {% elif post.materia == 'Tecniche di Programmazione-C' %}text-white bg-warning {% endif %}"><strong>{{post.titolo}}</strong></h1>
+</div>
+
+<!--likePost script js -->
+<script>
+  function likePost() {
+      // Codice per gestire il like
+      var likeCountElement = document.getElementById("like-count");
+      var likeCount = parseInt(likeCountElement.innerText);
+      likeCount++;
+
+      // Aggiorna il numero di likes a schermo
+      likeCountElement.innerText = likeCount;
+  }
+</script>
+<!-- FORM PER AGGIUNGERE LIKE + CONTEGGIO DEI LIKE PER POST -->
+<div class="d-flex justify-content-center mt-2 mb-0">
+  {% if current_user.is_authenticated %}
+    {% if current_user.id not in users|map(attribute=0) %}
+      <!-- Debug: <p>current_user.id: {{ current_user.id }}</p>
+      <p>users: {{ users }}</p> -->
+      <a class="like-button-pre" onclick="" href="{{ url_for('new_like', post_id=post.id, user_id=current_user.id) }}">
+        <span class="heart-icon"><i class="far fa-heart"></i></span><span class="like-count text-dark" id="like-count">Salva</span>
+    </a>    
+    {% else %}
+      <a class="like-button-post" onclick="" href="{{ url_for('remove_like', post_id=post.id, user_id=current_user.id) }}">
+        <span class="heart-icon"><i class="fas fa-heart"></i></span><span class="like-count text-white" id="like-count">Salvato</span>
+      </a>
+    {% endif %}
+
+
+  {% else %}
+    <a class="like-button-pre" onclick="" href="{{ url_for('no_authenticated')}}">
+      <span class="heart-icon"><i class="far fa-heart"></i></span><span class="like-count text-dark" id="like-count">Salva</span>
+    </a>
+  {% endif %}
+</div>
+
+{% block articolo %}
+<!--! QUI METTO L'ARTICOLO DEL SINGOLO FILE.HTML -->
+{% endblock %}
+
+<!--! QUI FINISCE IL BLOCK CONTENT -->
+{% endblock %}

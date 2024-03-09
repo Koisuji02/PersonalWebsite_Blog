@@ -1,0 +1,118 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p class="mb-1">Il <strong class="text-warning">PROCESSO</strong> è l’entità attiva, ovvero l’esecuzione di un programma (entità passiva); a seconda della loro esecuzione, ci sono processi:</p>
+    <ul class="livello2">
+        <li><span class="sottolineato">sequenziali</span> = azioni eseguite una dopo l’altra (ogni istruzione inizia terminata la precedente);</li>
+        <li><span class="sottolineato">concorrenti</span> = più istruzioni eseguite contemporaneamente (non deterministico). La concorrenza può essere fittizia (sistemi mono-processore) e reale (parallelismo, sistemi multi-core).</li>
+    </ul>
+    <p class="mb-1">I processi possono essere creati, gestiti, sincronizzati, terminati etc… Ogni processo possiede un PID (Process ID, ovvero un identificatore univoco intero non negativo); data la sua univocità, se processi concorrenti generano file simili, si può usare il PID per creare nomi di file univoci [esempio <strong class="consolas">sprintf(filename, “file-%d”, getpid());</strong>]. Alcuni di questi PID sono riservati:</p>
+    <ul class="livello3">
+        <li><strong class="consolas">0</strong> riservato per lo schedulatore dei processi (ovvero lo swapper, che viene eseguito a livello kernel);</li>
+        <li><strong class="consolas">1</strong> riservato per il processo di init (invocato alla fine del bootstrap, non termina mai e per questo diventa il padre di ogni processo rimasto “orfano”).</li>
+    </ul>
+    <p class="mb-1">Alcune <mark>syscall</mark> ci ritornano il pid:</p>
+    <ul class="livello3">
+        <li><strong class="consolas">pid_t getpid()</strong> → processo chiamante;</li>
+        <li><strong class="consolas">pid_t getppid()</strong> → padre del processo chiamante;</li>
+        <li><strong class="consolas">uid_t getuid()</strong> → utente del processo chiamante;</li>
+        <li><strong class="consolas">gid_t getgid()</strong> → gruppo del processo chiamante;</li>
+    </ul>
+    <p class="mb-2">Ora vediamo le principali <mark>syscall usate nella manipolazione dei processi</mark> [libreria &lt;unistd>]:</p>
+    <ul>
+        <li><strong class="consolas">pid_t fork()</strong> → <span class="text-warning">genera un processo figlio clonato dal padre</span> (quindi uguale eccetto per il PID, ritornato dalla fork). Dunque la fork viene richiamata 1 volta ma ritorna 2 volte (1 nel padre e 1 nel figlio). La fork torna quindi il PID del figlio nel padre e 0 nel figlio se termina correttamente, mentre -1 se non si può allocare un nuovo processo. Quindi processo padre e processo figlio:
+            <ul class="livello2">
+                <li>CONDIVIDONO: codice sorgennte, file descriptor, uid, gid, root, working directory, risorse di sistema, limiti e segnali;</li>
+                <li>DIFFERENZIANO: valore tornato dalla fork, spazio dati, heap e stack.</li>
+            </ul>
+            <div class="row mb-3 mt-2">
+                <div class="col-1 col-lg-2"></div>
+                <img class="img-fluid col-10 col-lg-8" src="{{url_for('static', filename='fork1.png')}}" alt="fork1">
+                <div class="col-1 col-lg-2"></div>
+            </div>
+            <p>⚠️Per fare in modo che, dato "n", si generino "n" processi figli, dovremmo fare un ciclo con i&lt;n che fa la fork solo sul padre [<strong class="consolas">if(fork());</strong>]!</p>
+        </li>
+        <li><strong class="consolas">sleep(int nseconds)</strong> → <span class="text-warning">mette il processo in attesa</span> per "nseconds" secondi.
+            <p class="mb-1 mt-2">Ci sono diversi modi per <mark>TERMINARE UN PROCESSO</mark>:</p>
+            <ul class="livello2">
+                <li>5 METODI <strong>STANDARD</strong>:
+                    <ul class="livello3">
+                        <li>return dalla funzione principale;</li>
+                        <li>exit;</li>
+                        <li>_exit o _Exit;</li>
+                        <li>return dal main dell’ultimo thread del processo;</li>
+                        <li>pthread_exit dall’ultimo thread del processo.</li>
+                    </ul>
+                </li>
+                <li>3 METODI <strong>ANOMALI</strong>:</li>
+                <ul class="livello3">
+                    <li>funzione abort;</li>
+                    <li>ricevere un segnale;</li>
+                    <li>pthread_cancel sull'ultimo thread del processo.</li>
+                </ul>
+            </ul>
+            <p class="mb-1 mt-2">Quando un processo termina, il kernel invia un segnale (SIGCHLD) al padre e lui può decidere di gestire la terminazione del figlio o ignorare la terminazione del figlio (default). Se il padre decide di <mark>gestire la terminazione del figlio</mark> può farlo in maniera:</p>
+            <ul class="livello2">
+                <li>ASINCRONA → con un gestore del segnale SIGCHLD (che analizzeremo in seguito con i segnali);</li>
+                <li>SINCRONA → mediante le syscall wait o waitpid (l’opposto della fork, ovvero una join).</li>
+            </ul>
+        </li>
+        <li class="mt-3"><strong class="consolas">pid_t wait(int *statLoc)</strong> [definita in &lt;sys/wait.h>] → ha <span class="text-warning">effetti diversi a seconda dello stato dei processi figli</span> del processo stesso:
+            <ul class="livello2 mb-2">
+                <li>ritorna con un errore se il processo non ha figli (-1);</li>
+                <li>blocca il processo se tutti i figli del processo sono ancora in esecuzione (bloccato fino a che 1 dei figli non terminerà, quando la wait ritornerà il PID del figlio terminato [valore di return] e lo stato di terminazione del figlio [parametro statLoc]);</li>
+                <li>ritorna subito se almeno 1 dei figli è terminato (ritornando le stesse cose del caso prima).</li>
+            </ul>
+            <p>⚠️Il parametro statLoc (puntatore ad un intero) indica lo stato di terminazione del processo figlio terminato, interpretabile confrontandolo con delle macro (WIFEXITED(statLoc) è vera se la terminazione è stata corretta e WEXITSTATUS(statLoc) cattura gli 8 LSB del parametro passato a exit).</p>
+        </li>
+        <li><strong class="consolas">pid_t waitpid(pid_t pid, int * statLoc, options)</strong> → si differenzia dalla wait in quanto <span class="text-warning">può essere non bloccante</span> (non blocca il padre in attesa della terminazione di almeno 1 figlio) e può attendere la terminazione di un figlio specifico. Se:
+            <ul class="livello2">
+                <li>pid>0: attende il figlio con quel specifico pid;</li>
+                <li>pid=-1: attende un figlio qualsiasi (come la wait);</li>
+                <li>pid=0: attende un figlio con gid = gid del chiamante;</li>
+                <li>abs(pid)&lt;-1: attende un figlio con gid = quel valore.</li>
+            </ul>
+            <p class="mt-3">Definiamo <strong class="text-warning">PROCESSO ZOMBIE</strong> un processo terminato dove il padre non ha ancora eseguito una wait (il segmento dei dati del processo non viene rimosso dalla process table per tenere traccia dello stato di uscita; l’entry viene rimossa solo dopo che il padre ha eseguito una wait).</p>
+            <p>Definiamo <strong class="text-warning">PROCESSO ORFANO</strong> un processo dove il padre termina prima di eseguire la wait (questi vengono ereditati dal processo init [quello con PID = 1] e non diverranno più processi zombie).</p>
+            <p>⚠️L'OS tiene traccia nella tabella dei processi, dove per ogni processo troviamo stato [new, ready, running, waiting, terminated], program counter, registri della CPU, segnali, informazioni sull'I/O, informazioni sullo scheduling della CPU, informazioni per la gestione della memoria. Quando la CPU viene assegnata ad un altro processo, il kernel deve salvare lo stato del processo running e caricare un nuovo processo ripristinandone lo stato salvato [CONTEXT SWITCHING] (il tempo dedicato a questo lavoro è overhead [non utiòe, quindi va ridotto al minimo]). Queste operazioni vengono controllate dalla SCHEDULER della CPU, che determina quando il processo corrente deve terminare la sua esecuzione e seleziona tra i processi disponibili il successivo da eseguire.</p>
+            <p>Sotto vediamo un esempio di come passare <mark>dal CFG (Control Graph Flow) al codice relativo</mark>:</p>
+            <div class="row mb-3">
+                <div class="col-lg-1"></div>
+                <img class="img-fluid col-12 col-lg-10" src="{{url_for('static', filename='wait.png')}}" alt="wait">
+                <div class="col-lg-1"></div>
+            </div>
+        </li>
+        <li><strong class="consolas">exec</strong> → <span class="text-warning">sostituisce il processo con un nuovo programma</span>. Ne esistono 6 versioni:
+            <ul class="livello2">
+                <li><strong class="consolas">int execl(char* path, char* arg0, ..., NULL);</strong></li>
+                <li><strong class="consolas">int execlp(char* name, char* arg0, ..., NULL);</strong></li>
+                <li><strong class="consolas">int execle(char* path, char* arg0, ..., NULL, char* envp[]);</strong></li>
+                <li><strong class="consolas">int execv(char* path, char* argv[]);</strong></li>
+                <li><strong class="consolas">int execvp(char* name, char* argv[]);</strong></li>
+                <li><strong class="consolas">int execve(char* path, char* argv[], char* envp[]).</strong></li>
+            </ul>
+            <p class="mt-2 mb-1">Dove le lettere dopo "exec" indicano:</p>
+            <ul class="livello3 mb-2">
+                <li><strong class="consolas">l</strong> (<span class="sottolineato">list</span>) → la funzione riceve una lista di argomenti, ovvero in char* arg0 troviamo il nome dell’eseguibile, mentre i successivi sono i parametri dell’eseguibile (simile alla stringa argv[0] in C e ai parametri come argv[i]);</li>
+                <li><strong class="consolas">v</strong> (<span class="sottolineato">vector</span>) → la funzione riceve un vettore di argomenti, simile alla matrice dinamica **argv del C;</li>
+                <li><strong class="consolas">p</strong> (<span class="sottolineato">path</span>) → la funzione riceve solo il nome del file (non il percorso [path]) e lo rintraccia con la variabile PATH, ovvero il campo char* path conterrà il percorso nelle exec senza “p” e può contenere solo il nome nelle “exec…p” [il percorso di default deve però essere contenuto nella variabile di sistema PATH];</li>
+                <li><strong class="consolas">e</strong> (<span class="sottolineato">environment</span>) → la funzione riceve un vettore di variabili di ambiente (environment), invece di usare l’environment corrente.</li>
+            </ul>
+            <p class="mb-1">La funzione exec non ritorna in caso di successo (nessun valore di return) e torna -1 in caso di errore!</p>
+            <p>⚠️Si ricorda che il 1° parametro è il percorso/nome del programma da eseguire, mentre il 2° parametro [arg0] è il nome fittizio locale che vogliamo dare al programma da eseguire (solo localmente, non cambia il nome vero)!</p>
+        </li>
+        <li><strong class="consolas">int system (const char* string)</strong> → <span class="text-warning">passa il comando di nome “string” all’ambiente affinchè questo lo esegua</span>; il controllo viene restituito al processo chiamamte una volta che l’esecuzione del comando è terminata. Ritorna il valore di terminazione della shell che esegue il comando, ma se fallisce torna -1 se fallisce la fork o la waitpid usata per realizzarla oppure torna 127 se fallisce la exec usata per realizzarla.</li>
+        <div class="row mb-3 mt-2">
+            <div class="col-lg-2"></div>
+            <img class="img-fluid col-12 col-lg-8" src="{{url_for('static', filename='system.png')}}" alt="system">
+            <div class="col-lg-2"></div>
+        </div>
+    </ul>
+    <p class="mb-1">⚠️In UNIX/Linux ci sono dei <strong>COMANDI DI SHELL</strong> per eseguire processi in modo sequenziale (FOREGROUND) [comando1 → output1 → comando2 → output2]; questi comandi possono essere seguiti da un “&” che permette di eseguire quel processo in <span class="text-warning sottolineato">BACKGROUND</span> (processo eseguito in modo indipendente dalla shell [lascia il terminale libero per altri lavori e permette di eseguire processi in parallelo) [comando1 & → comando2 & → output1 → output2]. Ci sono 2 comandi principali per visualizzare lo stato dei processi:</p>
+    <ul class="livello3">
+        <li><strong class="consolas">ps [opzioni]</strong> → process status of active process, ovvero elenca i processi attivi (e i loro dettagli) [senza opzioni stampa lo stato dei processi con stesso user ID dell’utente da cui si effettua il comando];</li>
+        <li><strong class="consolas">top</strong> → visualizza informazioni sui processi in esecuzione, aggiornate in run-time.</li>
+    </ul>
+    <p>Per <mark>inviare un segnale ad un processo dalla linea di comando di shell</mark> è possibile usare il comando <strong class="consolas">kill [-sig] pid</strong> con sig = codice del segnale (default SIGTERM = terminazione standard del processo), pid = PID del processo target. Il comando <strong class="consolas">killall [-sig] name</strong> termina tutti i processi di dato nome (utile per terminare tutti i processi generati dallo stesso programma senza specificare il pid).</p>
+</div>
+{% endblock %}

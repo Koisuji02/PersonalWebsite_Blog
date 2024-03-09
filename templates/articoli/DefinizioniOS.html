@@ -1,0 +1,55 @@
+{% extends "single.html" %}
+{% block articolo %}
+<div class="testo-articolo">
+    <p class="mb-1">Il <strong class="text-warning">SISTEMA OPERATIVO</strong> (OS) è un software eseguito in modalità protetta (<span class="sottolineato">kernel mode</span>) che controlla e coordina l’uso dell’hardware. Da un punto di vista top-down, possiamo vederlo come una macchina estesa (astrae i vari dispositivi del sistema); da un punto di vista bottom-up, possiamo considerarlo come il gestore delle risorse, ovvero un insieme di moduli, ognuno dei quali fornisce determinati <span class="text-warning">servizi</span>:</p>
+    <ul class="livello2">
+        <li>interprete dei comandi (utente effettua il proprio lavoro mediante un interprete di comandi);</li>
+        <li>gestione dei processi (processo [unità attiva] = programma [unità passiva] in esecuzione);</li>
+        <li>gestione della memoria principale (e secondaria);</li>
+        <li>gestione dei dispositivi I/O;</li>
+        <li>gestione dei file e filesystem;</li>
+        <li>meccanismi di protezione;</li>
+        <li>gestione delle reti.</li>
+    </ul>
+    <p class="mb-2">Vediamo i termini legati ai sistemi operativi:</p>
+    <ul>
+        <li><strong class="text-warning">KERNEL</strong> → nucleo del sistema operativo. Tramite livelli di astrazione, fornisce ai processi in esecuzione un accesso sicuro all’hardware; gestisce i processori, il multitasking e la memoria. È l’unico programma in esecuzione per tutto il tempo. Ce ne sono vari tipi:
+            <ul class="livello2">
+                <li>Kernel monolitico = realizza i servizi con moduli separati (ma ben integrati), mediante le system call (o syscall) [Unix, Linux];</li>
+                <li>Microkernel = definisce delle macchine virtuali sopra l’hardware (lento, ma stabile);</li>
+                <li>Kernel ibrido = approccio intermedio tra i due precedenti [Windows NT];</li>
+                <li>Esokernel = sistemi operativi verticali (separano la protezione dalla gestione).</li>
+            </ul>
+        </li>
+        <li><strong class="text-warning">BOOTSTRAP</strong> → carica il kernel in memoria centrale all’accensione del computer [firmware nella ROM];</li>
+        <li><strong class="text-warning">SYSTEM CALL</strong> (syscall) → sono gli entry-point dell’OS (spesso vi si accede con un API di alto livello). Si differenziano dalle funzioni di libreria perché:
+            <ul class="livello2 mb-1">
+                <li>non possono essere modificate o sostituite;</li>
+                <li>forniscono funzionalità di base;</li>
+                <li>vengono eseguite in “<strong>KERNEL MODE</strong>” [bit di modo = 0], mentre le funzioni di libreria in “<strong>USER MODE</strong>” [bit di modo = 1] (infatti l’OS si protegge lavorando in dual-mode).</li>
+            </ul>
+            <p>Le syscall sono effettuate mediante un’interruzione software, detta “trap”, la quale passa in kernel-mode cambiando il bit di modo, prende il codice della syscall richiamata (che identifica usando una tabella apposita nel kernel space) e ritorna in user-mode [11 passi di esecuzione].</p>
+        </li>
+        <li><strong class="text-warning">LOGIN</strong> (autenticazione) → procedura di accesso ad un sistema o ad una sua applicazione;</li>
+        <li><strong class="text-warning">SHELL</strong> → interprete “command-line” dei comandi dell’utente (che possono essere digitati sul terminale oppure letti da un file di “script). Non fa parte dell’OS;</li>
+        <li><strong class="text-warning">FILESYSTEM</strong> → struttura gerarchica a grafo aciclico in cui sono organizzati file e directories (direttori). La sua radice (root) è indicata con “/” [infatti nei nomi dei file non possiamo usare né “/” né il carattere “null”]. Dentro “home” troviamo gli utenti del computer, mentre dentro “bin” troviamo i comandi di shell; dopo il login, l’utente accederà alla sua <span class="sottolineato">HOME DIRECTORY</span> (per l’utente user1 sarà /home/user1 e corrisponde al simbolo <strong>~</strong>).
+            <p class="mb-1">I nomi dei percorsi (<span class="text-warning">path</span>) di sistema seguono delle regole:</p>
+            <ul class="livello2">
+                <li>“<strong>.</strong>” = directory corrente, mentre “<strong>..</strong>” = directory padre (livello sopra quello corrente);</li>
+                <li>possono essere specificati in 2 modalità:
+                    <ul class="livello3">
+                        <li><span class="text-warning">ASSOLUTA</span> = parto dalla “/” (root);</li>
+                        <li><span class="text-warning">RELATIVA</span> = parto dalla home directory (directory corrente) e mi sposto con “.” O “..”.</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><strong class="text-warning">PROGRAMMA</strong> → entità passiva; file eseguibile (su disco) contenente operazioni per realizzare un algoritmo. Può essere sequenziale (ogni istruzione inizia dopo la precedente [ciclo di fetch, decode e execute]) o parallelo [concorrente] (più istruzioni eseguite contemporaneamente, la cui relazione temporale è specificata da un grafo di precedenza delle tasks). Inoltre definiamo atomica un’operazione che non può essere interrotta.</li>
+        <li><strong class="text-warning">PROCESSO</strong> → entità attiva; programma in esecuzione. Nei sistemi UNIX, ogni processo è rappresentato da un identificatore intero univoco (non negativo). La relazione tra processi è rappresentata con l’albero dei processi (al bootstrap esiste un unico processo).</li>
+        <li><strong class="text-warning">THREAD</strong> (o processo leggero) → flusso di esecuzione (legato al program counter); ogni processo può contenere più threads (quindi più program counters). Ogni thread ha un identificatore locale al processo.</li>
+        <li><strong class="text-warning">PIPE</strong> → flusso di dati tra 2 processi [è uno pseudo-file]; è un canale di comunicazione di tipo half-duplex (ovvero da P1 a P2 oppure da P2 a P1) [simplex solo un verso, full-duplex entrambi i versi in contemporanea].</li>
+        <li><strong class="text-warning">DEADLOCK</strong> (stallo, impasse) → avviene quando 2 entità si bloccano a vicenda. Caso particolare è il <span class="text-warning">LIVELOCK</span> (stallo attivo), dove le 2 entità si fermano, ma non sono effettivamente bloccate (es. quando 2 persone si incontrano in corridoio e fanno passi nella stessa direzione, nonostante lo spazio per passare entrambi ci sia).</li>
+        <li><strong class="text-warning">STARVATION</strong> (fame, inedia) → ad un’entità viene rifiutato l’accesso ad una risorsa necessaria al suo progresso (starvation non implica deadlock, ma deadlock implica starvation).</li>
+    </ul>
+</div>
+{% endblock %}
