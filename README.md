@@ -1,2 +1,5 @@
-# PersonalWebsite_Blog
- My personal website but also a blog for engineering topics
+# Blog Template
+![Cover](cover.png)
+
+## Description
+Just a simple blog template built in Flask
